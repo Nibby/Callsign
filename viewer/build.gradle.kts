@@ -1,5 +1,11 @@
 plugins {
-    id("codes.nibby.sherlock.java-application-conventions")
+    id("codes.nibby.callsign.java-application-conventions")
+    id("org.openjfx.javafxplugin") version "0.0.14"
+}
+
+dependencies {
+    implementation("org.xerial:sqlite-jdbc:3.42.0.0")
+    implementation(project(":api:kotlin"))
 }
 
 repositories {
@@ -12,6 +18,11 @@ java {
     }
 }
 
+javafx {
+    version = "20"
+    modules("javafx.controls")
+}
+
 application {
-    mainClass.set("codes.nibby.sherlock.viewer.ViewerApplication")
+    mainClass.set("codes.nibby.callsign.viewer.ViewerApplication")
 }

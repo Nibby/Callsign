@@ -22,13 +22,13 @@ class CsvFileSink(outputFolder: Path, val nameWithoutExtension: String) : Timeli
             Files.createDirectories(outputFolder)
         }
 
-        outputFile = outputFolder.resolve("$nameWithoutExtension.${CsvFormat.EXTENSION}")
+        outputFile = outputFolder.resolve("$nameWithoutExtension.${CsvFormat.Extension}")
 
         if (!Files.exists(outputFile)) {
             Files.createFile(outputFile)
         }
 
-        bufferedWriter = Files.newBufferedWriter(outputFile, CsvFormat.CHARSET, StandardOpenOption.APPEND)
+        bufferedWriter = Files.newBufferedWriter(outputFile, CsvFormat.Charset, StandardOpenOption.APPEND)
         csvWriter = CsvFormat.createWriter(bufferedWriter)
     }
 
