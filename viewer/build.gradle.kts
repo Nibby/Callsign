@@ -5,6 +5,8 @@ plugins {
 
 dependencies {
     implementation("org.xerial:sqlite-jdbc:3.42.0.0")
+    implementation("com.google.guava:guava:32.1.2-jre")
+
     implementation(project(":api:kotlin"))
 }
 

@@ -1,7 +1,11 @@
 package codes.nibby.callsign.api
 
-class TimedEvent internal constructor(name: String, val startTimeNs: Long?) : Event(name) {
+class TimedEvent internal constructor(name: String, val startTimeNs: Long?) : Event(TYPE, name) {
 
-    internal var endTimeNs: Long? = null
+    companion object {
+        val TYPE = "t"
+    }
+
+    var endTimeNs: Long? = null
 
 }

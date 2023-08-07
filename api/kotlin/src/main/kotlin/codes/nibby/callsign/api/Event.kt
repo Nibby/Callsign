@@ -1,6 +1,6 @@
 package codes.nibby.callsign.api
 
-abstract class Event(val name: String) {
+abstract class Event(val type: String, val name: String) {
 
     private val attributeData = AttributeData(HashMap())
     internal var saved: Boolean = false
@@ -25,6 +25,10 @@ abstract class Event(val name: String) {
 
     fun getAttribute(name: String) : String? {
         return attributeData.map[name]
+    }
+
+    fun getAttributeNames() : Set<String> {
+        return attributeData.map.keys;
     }
 
     internal fun getAttributeData(): AttributeData {

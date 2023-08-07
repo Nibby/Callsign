@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface TimelineDigestDocument {
 
-    void loadForRead() throws IOException;
+    void load() throws IOException;
 
     void unload();
 

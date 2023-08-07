@@ -64,7 +64,7 @@ public final class SQLiteTimelineDigestDocumentAssembler implements TimelineDige
 
     private WritableTimelineDigestDocument createDigestDocument(Path outputFile, ProgressReporter progressReporter) throws IOException {
         var document = new WritableSQLiteTimelineDigestDocument(outputFile);
-        document.loadForWrite();
+        document.initialize();
 
         return document;
     }
@@ -76,7 +76,11 @@ public final class SQLiteTimelineDigestDocumentAssembler implements TimelineDige
     }
 
     private void importTraceEvent(Event event, WritableTimelineDigestDocument document, long totalEventCount, ProgressReporter progressReporter) {
-        document.appendEvent(event);
+        try {
+            document.appendEvent(event);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // TODO: Progress reporting
     }

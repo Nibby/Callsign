@@ -20,9 +20,6 @@ class CsvFormat {
         val Charset: Charset = StandardCharsets.UTF_8
         val Extension = "csff1"
 
-        private val TYPE_TIMED_EVENT = "t"
-        private val TYPE_INSTANT_EVENT = "i"
-
         fun createWriter(writer: Writer): CsvWriter {
             return CsvWriter.builder().build(writer)
         }
@@ -36,10 +33,10 @@ class CsvFormat {
             val attributeData = Json.encodeToString(AttributeData.serializer(), data)
 
             return listOf(
-                TYPE_TIMED_EVENT,
+                event.type,
                 event.name,
-                if (event.startTimeNs != null) event.startTimeNs.toString() else "-1",
-                if (event.endTimeNs != null) event.endTimeNs.toString() else "-1",
+                if (event.startTimeNs != null) event.startTimeNs.toString() else Long.MIN_VALUE.toString(),
+                if (event.endTimeNs != null) event.endTimeNs.toString() else Long.MAX_VALUE.toString(),
                 attributeData
             )
         }
@@ -49,7 +46,7 @@ class CsvFormat {
             val attributeData = Json.encodeToString(AttributeData.serializer(), data)
 
             return listOf(
-                TYPE_INSTANT_EVENT,
+                event.type,
                 event.name,
                 event.timeNs.toString(),
                 "",
@@ -66,12 +63,12 @@ class CsvFormat {
 
             val event: Event
 
-            if (TYPE_TIMED_EVENT.equals(eventType)) {
+            if (TimedEvent.TYPE.equals(eventType)) {
                 val timedEvent = TimedEvent(name, startTimeRaw.toLongOrNull())
                 timedEvent.endTimeNs = endTimeRaw.toLongOrNull()
 
                 event = timedEvent
-            } else if (TYPE_INSTANT_EVENT.equals(eventType)) {
+            } else if (InstantEvent.TYPE.equals(eventType)) {
                 event = InstantEvent(name, startTimeRaw.toLong())
             } else {
                 return null

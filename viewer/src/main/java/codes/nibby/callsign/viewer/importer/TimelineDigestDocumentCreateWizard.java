@@ -117,7 +117,7 @@ public final class TimelineDigestDocumentCreateWizard {
     private static void assembleAndOpenViewerAsync(ViewerApplicationController controller, AssemblyOptions assemblyOptions, ProgressDialog progressDialog) {
         var assembler = TimelineDigestDocumentFormat.SQLITE.createAssembler();
 
-        TimelineDigestDocument assembledDocument = null;
+        TimelineDigestDocument assembledDocument;
         try {
             assembledDocument = assembler.assemble(assemblyOptions, progressDialog);
         } catch (IOException e) {

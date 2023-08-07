@@ -6,8 +6,6 @@ import java.io.IOException;
 
 public interface WritableTimelineDigestDocument extends TimelineDigestDocument {
 
-    void loadForWrite() throws IOException;
-
-    void appendEvent(Event event);
+    void appendEvent(Event event) throws IOException;
 
 }

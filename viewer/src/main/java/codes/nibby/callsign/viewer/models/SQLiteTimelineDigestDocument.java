@@ -9,6 +9,9 @@ import java.sql.SQLException;
 
 public class SQLiteTimelineDigestDocument implements TimelineDigestDocument {
 
+    protected static final String EVENT_DATA_TABLE_NAME = "event_data";
+    protected static final String ATTRIBUTE_HEADER_TABLE_NAME = "attribute_name_lookup";
+
     protected final Path path;
     protected Connection connection;
 
@@ -19,7 +22,7 @@ public class SQLiteTimelineDigestDocument implements TimelineDigestDocument {
     }
 
     @Override
-    public void loadForRead() throws IOException {
+    public void load() throws IOException {
         if (Files.exists(path)) {
             throw new IOException("File does not exist: " + path);
         }

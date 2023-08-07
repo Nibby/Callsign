@@ -1,6 +1,6 @@
 package codes.nibby.callsign.api
 
-class TimelineLogger(val sink: TimelineLogSink) {
+class TimelineLogger(internal val sink: TimelineLogSink) {
 
     fun recordEventStart(name: String): TimedEvent {
         val startTimeNs = System.nanoTime()
