@@ -2,10 +2,10 @@ package codes.nibby.callsign.viewer.importer;
 
 import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.viewer.ProgressReporter;
-import codes.nibby.callsign.viewer.models.SQLiteTimelineDigestDocument;
-import codes.nibby.callsign.viewer.models.TimelineDigestDocument;
-import codes.nibby.callsign.viewer.models.WritableSQLiteTimelineDigestDocument;
-import codes.nibby.callsign.viewer.models.WritableTimelineDigestDocument;
+import codes.nibby.callsign.viewer.models.SQLiteTraceDocument;
+import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.WritableSQLiteTraceDocument;
+import codes.nibby.callsign.viewer.models.WritableTraceDocument;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -14,20 +14,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class SQLiteTimelineDigestDocumentAssembler implements TimelineDigestDocumentAssembler {
+public final class SQLiteTraceDocumentAssembler implements TraceDocumentAssembler {
 
     @Override
-    public TimelineDigestDocument assemble(AssemblyOptions options, ProgressReporter progressReporter) throws IOException {
+    public TraceDocument assemble(AssemblyOptions options, ProgressReporter progressReporter) throws IOException {
         long totalEventCount = performInitialPass(options.inputTraceFiles, progressReporter);
 
-        WritableTimelineDigestDocument document = createDigestDocument(options.outputFile, progressReporter);
+        WritableTraceDocument document = createDigestDocument(options.outputFile, progressReporter);
 
         importTraceData(document, options.inputTraceFiles, totalEventCount, progressReporter);
 
-        return new SQLiteTimelineDigestDocument(options.outputFile);
+        return new SQLiteTraceDocument(options.outputFile);
     }
 
-    private long performInitialPass(List<InputTraceFile> inputTraceFiles, ProgressReporter progressReporter) throws IOException {
+    private long performInitialPass(List<RawTraceFile> inputTraceFiles, ProgressReporter progressReporter) throws IOException {
         progressReporter.notifyProgressMessageChanged("Pre-processing...");
         progressReporter.notifyProgressIndeterminate(true);
 
@@ -54,7 +54,7 @@ public final class SQLiteTimelineDigestDocumentAssembler implements TimelineDige
         return totalEventCount.orElse(0L);
     }
 
-    private long countEventEntries(InputTraceFile inputFile) throws IOException {
+    private long countEventEntries(RawTraceFile inputFile) throws IOException {
         var counter = new AtomicInteger(0);
 
         inputFile.streamEventData(event -> counter.incrementAndGet());
@@ -62,20 +62,20 @@ public final class SQLiteTimelineDigestDocumentAssembler implements TimelineDige
         return counter.get();
     }
 
-    private WritableTimelineDigestDocument createDigestDocument(Path outputFile, ProgressReporter progressReporter) throws IOException {
-        var document = new WritableSQLiteTimelineDigestDocument(outputFile);
+    private WritableTraceDocument createDigestDocument(Path outputFile, ProgressReporter progressReporter) throws IOException {
+        var document = new WritableSQLiteTraceDocument(outputFile);
         document.initialize();
 
         return document;
     }
 
-    private void importTraceData(WritableTimelineDigestDocument document, List<InputTraceFile> inputTraceFiles, long totalEventCount, ProgressReporter progressReporter) throws IOException {
-        for (InputTraceFile traceFile : inputTraceFiles) {
+    private void importTraceData(WritableTraceDocument document, List<RawTraceFile> inputTraceFiles, long totalEventCount, ProgressReporter progressReporter) throws IOException {
+        for (RawTraceFile traceFile : inputTraceFiles) {
             traceFile.streamEventData(event -> importTraceEvent(event, document, totalEventCount, progressReporter));
         }
     }
 
-    private void importTraceEvent(Event event, WritableTimelineDigestDocument document, long totalEventCount, ProgressReporter progressReporter) {
+    private void importTraceEvent(Event event, WritableTraceDocument document, long totalEventCount, ProgressReporter progressReporter) {
         try {
             document.appendEvent(event);
         } catch (IOException e) {

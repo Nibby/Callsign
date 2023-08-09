@@ -4,7 +4,7 @@ import codes.nibby.callsign.api.Event;
 
 import java.io.IOException;
 
-public interface WritableTimelineDigestDocument extends TimelineDigestDocument {
+public interface WritableTraceDocument extends TraceDocument {
 
     void appendEvent(Event event) throws IOException;
 

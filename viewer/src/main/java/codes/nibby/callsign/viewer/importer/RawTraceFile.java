@@ -10,13 +10,13 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 
-public final class InputTraceFile {
+public final class RawTraceFile {
 
-    private static final Map<String, Class<? extends InputTraceFileCsvFormatReader>> FILE_EXTENSION_READERS = new HashMap<>();
+    private static final Map<String, Class<? extends RawTraceFileCsvReader>> FILE_EXTENSION_READERS = new HashMap<>();
     private static final List<String> SUPPORTED_FILE_EXTENSIONS;
 
     static {
-        FILE_EXTENSION_READERS.put(CsvFormat.Companion.getExtension(), InputTraceFileCsvFormatReader.class);
+        FILE_EXTENSION_READERS.put(CsvFormat.Companion.getExtension(), RawTraceFileCsvReader.class);
 
         SUPPORTED_FILE_EXTENSIONS = new ArrayList<>(FILE_EXTENSION_READERS.keySet());
     }
@@ -24,7 +24,7 @@ public final class InputTraceFile {
     public final Path path;
     private final String extension;
 
-    public InputTraceFile(Path path) {
+    public RawTraceFile(Path path) {
         this.extension = assertIsSupportedFileExtension(path);
         this.path = path;
     }
@@ -42,19 +42,19 @@ public final class InputTraceFile {
     }
 
     public void streamEventData(Consumer<Event> eventConsumer) throws IOException {
-        InputTraceFileFormatReader reader = createReader();
+        RawTraceFileReader reader = createReader();
         reader.streamEvents(eventConsumer);
     }
 
-    private InputTraceFileFormatReader createReader() {
-        Class<? extends InputTraceFileCsvFormatReader> readerClass = FILE_EXTENSION_READERS.get(this.extension);
+    private RawTraceFileReader createReader() {
+        Class<? extends RawTraceFileCsvReader> readerClass = FILE_EXTENSION_READERS.get(this.extension);
 
         if (readerClass == null) {
             throw new IllegalStateException("No reader class mapped for extension: " + this.extension);
         }
 
         try {
-            Constructor<? extends InputTraceFileCsvFormatReader> constructor = readerClass.getConstructor(Path.class);
+            Constructor<? extends RawTraceFileCsvReader> constructor = readerClass.getConstructor(Path.class);
             return constructor.newInstance(this.path);
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);

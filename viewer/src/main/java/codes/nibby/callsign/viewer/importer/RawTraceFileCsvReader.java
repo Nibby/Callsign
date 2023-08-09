@@ -9,11 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
-public final class InputTraceFileCsvFormatReader implements InputTraceFileFormatReader {
+public final class RawTraceFileCsvReader implements RawTraceFileReader {
 
     public final Path csvFile;
 
-    public InputTraceFileCsvFormatReader(Path csvFile) {
+    public RawTraceFileCsvReader(Path csvFile) {
         this.csvFile = csvFile;
     }
 

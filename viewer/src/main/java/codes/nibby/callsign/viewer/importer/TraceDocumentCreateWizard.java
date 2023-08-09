@@ -2,8 +2,8 @@ package codes.nibby.callsign.viewer.importer;
 
 import codes.nibby.callsign.viewer.ViewerApplicationController;
 import codes.nibby.callsign.viewer.ViewerPreferences;
-import codes.nibby.callsign.viewer.models.TimelineDigestDocument;
-import codes.nibby.callsign.viewer.models.TimelineDigestDocumentFormat;
+import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.TraceDocumentFormat;
 import codes.nibby.callsign.viewer.ui.ProgressDialog;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -19,12 +19,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static codes.nibby.callsign.viewer.importer.TimelineDigestDocumentAssembler.AssemblyOptions;
+import static codes.nibby.callsign.viewer.importer.TraceDocumentAssembler.AssemblyOptions;
 
-public final class TimelineDigestDocumentCreateWizard {
+public final class TraceDocumentCreateWizard {
 
     public static void begin(ViewerApplicationController controller, Stage stage, ViewerPreferences preferences) {
-        Optional<List<InputTraceFile>> initialFileSelection = promptFileSelection(stage, preferences);
+        Optional<List<RawTraceFile>> initialFileSelection = promptFileSelection(stage, preferences);
 
         if (initialFileSelection.isEmpty()) {
             return;
@@ -39,10 +39,10 @@ public final class TimelineDigestDocumentCreateWizard {
         beginDigestAssembly(controller, importOptions.get());
     }
 
-    private static Optional<List<InputTraceFile>> promptFileSelection(Stage stage, ViewerPreferences preferences) {
+    private static Optional<List<RawTraceFile>> promptFileSelection(Stage stage, ViewerPreferences preferences) {
         var importDirectory = preferences.getImportDirectoryForTraceFiles().toFile();
 
-        List<String> supportedExtensions = InputTraceFile.getSupportedFileExtensions();
+        List<String> supportedExtensions = RawTraceFile.getSupportedFileExtensions();
         List<String> supportedExtensionsRegexFormat = supportedExtensions.stream()
             .map(extension -> "*." + extension)
             .collect(Collectors.toList());
@@ -58,7 +58,7 @@ public final class TimelineDigestDocumentCreateWizard {
             return Optional.empty();
         }
 
-        List<InputTraceFile> inputTraceFiles = filterAndWrapSelectionAsInputTraceFile(files, supportedExtensions);
+        List<RawTraceFile> inputTraceFiles = filterAndWrapSelectionAsInputTraceFile(files, supportedExtensions);
 
         if (!inputTraceFiles.isEmpty()) {
             Path selectedFolder = files.get(0).toPath().getParent();
@@ -69,7 +69,7 @@ public final class TimelineDigestDocumentCreateWizard {
         return Optional.of(inputTraceFiles);
     }
 
-    private static Optional<AssemblyOptions> confirmImportOptions(List<InputTraceFile> initialFileSelection, ViewerPreferences preferences) {
+    private static Optional<AssemblyOptions> confirmImportOptions(List<RawTraceFile> initialFileSelection, ViewerPreferences preferences) {
         // Code is temporary (proof-of-concept)
         // TODO: UI
         //       - Summarise files that will be imported
@@ -99,10 +99,10 @@ public final class TimelineDigestDocumentCreateWizard {
         return Optional.of(new AssemblyOptions(filesToImport, outputFile));
     }
 
-    private static List<InputTraceFile> filterAndWrapSelectionAsInputTraceFile(List<File> selection, List<String> supportedExtensions) {
+    private static List<RawTraceFile> filterAndWrapSelectionAsInputTraceFile(List<File> selection, List<String> supportedExtensions) {
         return selection.stream()
             .filter(file -> isSupportedExtension(file, supportedExtensions))
-            .map(file -> new InputTraceFile(file.toPath()))
+            .map(file -> new RawTraceFile(file.toPath()))
             .collect(Collectors.toList());
     }
 
@@ -115,9 +115,9 @@ public final class TimelineDigestDocumentCreateWizard {
     }
 
     private static void assembleAndOpenViewerAsync(ViewerApplicationController controller, AssemblyOptions assemblyOptions, ProgressDialog progressDialog) {
-        var assembler = TimelineDigestDocumentFormat.SQLITE.createAssembler();
+        var assembler = TraceDocumentFormat.SQLITE.createAssembler();
 
-        TimelineDigestDocument assembledDocument;
+        TraceDocument assembledDocument;
         try {
             assembledDocument = assembler.assemble(assemblyOptions, progressDialog);
         } catch (IOException e) {

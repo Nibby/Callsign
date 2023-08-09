@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class SQLiteTimelineDigestDocument implements TimelineDigestDocument {
+public class SQLiteTraceDocument implements TraceDocument {
 
     protected static final String EVENT_DATA_TABLE_NAME = "event_data";
     protected static final String ATTRIBUTE_HEADER_TABLE_NAME = "attribute_name_lookup";
@@ -17,7 +17,7 @@ public class SQLiteTimelineDigestDocument implements TimelineDigestDocument {
 
     protected final Object stateLock = new Object();
 
-    public SQLiteTimelineDigestDocument(Path path) {
+    public SQLiteTraceDocument(Path path) {
         this.path = path;
     }
 

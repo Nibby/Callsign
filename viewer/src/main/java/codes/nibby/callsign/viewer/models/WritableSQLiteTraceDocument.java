@@ -19,12 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public final class WritableSQLiteTimelineDigestDocument extends SQLiteTimelineDigestDocument implements WritableTimelineDigestDocument {
+public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument implements WritableTraceDocument {
 
     private final Map<String, String> attributeNameLookup = new ConcurrentHashMap<>();
     private final AtomicInteger nextAttributeNameId = new AtomicInteger(0);
 
-    public WritableSQLiteTimelineDigestDocument(Path path) {
+    public WritableSQLiteTraceDocument(Path path) {
         super(path);
     }
 

@@ -1,6 +1,6 @@
 package codes.nibby.callsign.viewer;
 
-import codes.nibby.callsign.viewer.importer.TimelineDigestDocumentCreateWizard;
+import codes.nibby.callsign.viewer.importer.TraceDocumentCreateWizard;
 import javafx.application.Application;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
@@ -37,7 +37,7 @@ public final class ViewerApplication extends Application {
     }
 
     private void createDigest(Stage stage) {
-        TimelineDigestDocumentCreateWizard.begin(controller, stage, preferences);
+        TraceDocumentCreateWizard.begin(controller, stage, preferences);
     }
 
     private void openDigest() {

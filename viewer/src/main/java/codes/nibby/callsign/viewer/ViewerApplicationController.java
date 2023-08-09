@@ -1,10 +1,10 @@
 package codes.nibby.callsign.viewer;
 
-import codes.nibby.callsign.viewer.models.TimelineDigestDocument;
+import codes.nibby.callsign.viewer.models.TraceDocument;
 
 public interface ViewerApplicationController {
 
-    void openViewer(TimelineDigestDocument document);
-    void closeViewer(TimelineDigestDocument document);
+    void openViewer(TraceDocument document);
+    void closeViewer(TraceDocument document);
 
 }
