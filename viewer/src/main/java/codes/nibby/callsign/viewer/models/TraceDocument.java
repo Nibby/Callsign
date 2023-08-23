@@ -8,4 +8,8 @@ public interface TraceDocument {
 
     void unload();
 
+    long getEarliestEventTimeNs();
+
+    long getLatestEventTimeNs();
+
 }

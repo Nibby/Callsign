@@ -165,7 +165,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         StringBuilder additionalAttributeColumns = new StringBuilder();
         StringBuilder additionalAttributeValues = new StringBuilder();
 
-        Map<Integer, String> parameterOffsetToAttribueName = new HashMap<>(attributeNameLookup.size());
+        Map<Integer, String> parameterOffsetToAttributeName = new HashMap<>(attributeNameLookup.size());
 
         int i = 0;
         for (var entry  : attributeNameLookup.entrySet()) {
@@ -175,16 +175,18 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             additionalAttributeColumns.append(", ").append(columnName);
             additionalAttributeValues.append(", ?");
 
-            parameterOffsetToAttribueName.put(i, attributeName);
+            parameterOffsetToAttributeName.put(i, attributeName);
 
             i++;
         }
 
-        try (PreparedStatement statement = connection.prepareStatement(
-            "INSERT INTO " + EVENT_DATA_TABLE_NAME +
-                "(event_type, event_name, start_time_ns, end_time_ns" + additionalAttributeColumns + ") " +
-                "VALUES (?, ?, ?, ?" + additionalAttributeValues + ")"
-        )) {
+        try (
+            PreparedStatement statement = connection.prepareStatement(
+                "INSERT INTO " + EVENT_DATA_TABLE_NAME +
+                    "(event_type, event_name, start_time_ns, end_time_ns" + additionalAttributeColumns + ") " +
+                    "VALUES (?, ?, ?, ?" + additionalAttributeValues + ")"
+            )
+        ) {
             statement.setString(1, event.getType());
             statement.setString(2, event.getName());
 
@@ -201,7 +203,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
                 throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
             }
 
-            for (var attributeEntry : parameterOffsetToAttribueName.entrySet()) {
+            for (var attributeEntry : parameterOffsetToAttributeName.entrySet()) {
                 int offset = attributeEntry.getKey();
                 String attributeName = attributeEntry.getValue();
 

@@ -4,7 +4,7 @@ import codes.nibby.callsign.viewer.models.TraceDocument;
 
 public interface ViewerApplicationController {
 
-    void openViewer(TraceDocument document);
-    void closeViewer(TraceDocument document);
+    void openExplorer(TraceDocument document);
+    void closeExplorer(TraceDocument document);
 
 }

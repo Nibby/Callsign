@@ -1,6 +1,6 @@
 package codes.nibby.callsign.viewer.ui;
 
-import codes.nibby.callsign.viewer.ProgressReporter;
+import codes.nibby.callsign.viewer.misc.ProgressReporter;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
@@ -14,7 +14,6 @@ public final class ProgressDialog implements ProgressReporter {
     private final Label messageTitleLabel;
     private final Label messageLabel;
     private final ProgressBar progressBar;
-    private final Button cancelButton;
 
     private double progressValue;
 
@@ -35,16 +34,17 @@ public final class ProgressDialog implements ProgressReporter {
 
         messageLabel = new Label();
         progressBar = new ProgressBar(progressValue);
-        cancelButton = new Button("Cancel");
 
         var contentPane = new FlowPane(Orientation.VERTICAL);
-        contentPane.getChildren().addAll(messageTitleLabel, messageLabel, progressBar, cancelButton);
+        contentPane.getChildren().addAll(messageTitleLabel, messageLabel, progressBar);
 
         var dialogContent = new DialogPane();
         dialogContent.setContent(contentPane);
+        dialogContent.getButtonTypes().add(new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
 
         dialog = new Dialog<>();
         dialog.setDialogPane(dialogContent);
+        dialog.setOnCloseRequest(event -> requestCancellation());
     }
 
     public void show() {
@@ -94,12 +94,12 @@ public final class ProgressDialog implements ProgressReporter {
     }
 
     @Override
-    public void requestCancellation() {
+    public void cancel() {
         canceled = true;
     }
 
     @Override
-    public boolean isCancellationRequested() {
+    public boolean isCancelRequested() {
         return canceled;
     }
 }

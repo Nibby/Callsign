@@ -50,7 +50,9 @@ public final class TraceDocumentCreateWizard {
         var fileChooser = new FileChooser();
         fileChooser.setTitle("Select raw trace file(s) to import");
         fileChooser.setInitialDirectory(importDirectory);
-        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Callsign Raw Trace File", supportedExtensionsRegexFormat));
+
+        var traceFilter = new FileChooser.ExtensionFilter("Callsign Raw Trace File", supportedExtensionsRegexFormat);
+        fileChooser.setSelectedExtensionFilter(traceFilter);
 
         List<File> files = fileChooser.showOpenMultipleDialog(stage);
 
@@ -61,7 +63,7 @@ public final class TraceDocumentCreateWizard {
         List<RawTraceFile> inputTraceFiles = filterAndWrapSelectionAsInputTraceFile(files, supportedExtensions);
 
         if (!inputTraceFiles.isEmpty()) {
-            Path selectedFolder = files.get(0).toPath().getParent();
+            Path selectedFolder = inputTraceFiles.get(0).path.getParent();
             preferences.setLastUsedOpenDirectoryForDigestFile(selectedFolder);
         }
 
@@ -118,11 +120,10 @@ public final class TraceDocumentCreateWizard {
         var assembler = TraceDocumentFormat.SQLITE.createAssembler();
 
         TraceDocument assembledDocument;
+
         try {
             assembledDocument = assembler.assemble(assemblyOptions, progressDialog);
         } catch (IOException e) {
-            progressDialog.notifyComplete();
-
             Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("An error occurred while importing trace data");
@@ -131,10 +132,13 @@ public final class TraceDocumentCreateWizard {
                 alert.show();
             });
 
+            // TODO: Better error handling
             throw new RuntimeException(e);
+        } finally {
+            progressDialog.notifyComplete();
         }
 
-        controller.openViewer(assembledDocument);
+        controller.openExplorer(assembledDocument);
     }
 
     private static boolean isSupportedExtension(File file, List<String> supportedExtensions) {
