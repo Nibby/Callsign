@@ -19,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.*;
+
 public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument implements WritableTraceDocument {
 
     private final Map<String, String> attributeNameLookup = new ConcurrentHashMap<>();
@@ -29,21 +31,21 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
     }
 
     public void initialize() throws IOException {
-        boolean modifyRatherThanCreate = Files.exists(this.path);
+        boolean modifyNotCreate = Files.exists(this.path);
 
         try {
             synchronized (stateLock) {
-                initializeImpl(modifyRatherThanCreate);
+                initializeImpl(modifyNotCreate);
             }
         } catch (SQLException e) {
             throw new IOException("Failed to initialize SQLite database", e);
         }
     }
 
-    private void initializeImpl(boolean modifyRatherThanCreate) throws SQLException {
+    private void initializeImpl(boolean modifyNotCreate) throws SQLException {
         openConnection();
 
-        if (!modifyRatherThanCreate) {
+        if (!modifyNotCreate) {
             createInitialTablesAndIndices();
         }
 
@@ -53,13 +55,13 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
     private void createInitialTablesAndIndices() throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute(
-                "CREATE TABLE " + EVENT_DATA_TABLE_NAME +
+                "CREATE TABLE " + EventsTable.TABLE_NAME +
                 "(" +
-                "    id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "    event_type TEXT NOT NULL," +
-                "    event_name TEXT NOT NULL," +
-                "    start_time_ns INTEGER NULL," +
-                "    end_time_ns INTEGER NULL" +
+                    EventsTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    EventsTable.COLUMN_EVENT_TYPE + " TEXT NOT NULL," +
+                    EventsTable.COLUMN_EVENT_NAME + " TEXT NOT NULL," +
+                    EventsTable.COLUMN_START_TIME_NS + " INTEGER NULL," +
+                    EventsTable.COLUMN_END_TIME_NS + " INTEGER NULL" +
                 ")"
             );
 
@@ -68,11 +70,11 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             statement.execute("CREATE INDEX index_end_time_ns ON event_data (end_time_ns)");
 
             statement.execute(
-                "CREATE TABLE " + ATTRIBUTE_HEADER_TABLE_NAME +
+                "CREATE TABLE " + AttributeHeaderTable.TABLE_NAME +
                 "(" +
-                "    id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "    column_name TEXT NOT NULL," +
-                "    attribute_name TEXT NOT NULL" +
+                    AttributeHeaderTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    AttributeHeaderTable.COLUMN_COLUMN_NAME + " TEXT NOT NULL," +
+                    AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME + " TEXT NOT NULL" +
                 ")"
             );
 
@@ -83,7 +85,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
 
     private void loadAttributeHeaderData() throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("SELECT seq FROM sqlite_sequence WHERE name = ?")) {
-            statement.setString(1, ATTRIBUTE_HEADER_TABLE_NAME);
+            statement.setString(1, AttributeHeaderTable.TABLE_NAME);
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -95,7 +97,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         }
 
         try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM " + ATTRIBUTE_HEADER_TABLE_NAME);
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM " + AttributeHeaderTable.TABLE_NAME);
 
             while (resultSet.next()) {
                 String columnName = resultSet.getString("column_name");
@@ -136,7 +138,10 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         Set<String> newColumnNames = new HashSet<>();
 
         try (PreparedStatement statement = connection.prepareStatement(
-            "INSERT INTO " + ATTRIBUTE_HEADER_TABLE_NAME + " (column_name, attribute_name) VALUES (?, ?)"
+            "INSERT INTO " + AttributeHeaderTable.TABLE_NAME + " ("
+                + AttributeHeaderTable.COLUMN_COLUMN_NAME + ", "
+                + AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME
+                + ") VALUES (?, ?)"
         )) {
             for (String attributeName : missingAttributeNames) {
                 String columnName = "attribute_" + nextAttributeNameId.get();
@@ -155,7 +160,8 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         for (String newColumnName : newColumnNames) {
             try (Statement statement = connection.createStatement()) {
                 statement.execute(
-                    "ALTER TABLE " + EVENT_DATA_TABLE_NAME + " ADD COLUMN " + newColumnName + " TEXT NULL"
+                    "ALTER TABLE " + EventsTable.TABLE_NAME
+                        + " ADD COLUMN " + newColumnName + " TEXT NULL"
                 );
             }
         }
@@ -182,8 +188,12 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
 
         try (
             PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO " + EVENT_DATA_TABLE_NAME +
-                    "(event_type, event_name, start_time_ns, end_time_ns" + additionalAttributeColumns + ") " +
+                "INSERT INTO " + EventsTable.TABLE_NAME + "(" +
+                    EventsTable.COLUMN_EVENT_TYPE + ", " +
+                    EventsTable.COLUMN_EVENT_NAME + ", " +
+                    EventsTable.COLUMN_START_TIME_NS + ", " +
+                    EventsTable.COLUMN_END_TIME_NS +
+                    additionalAttributeColumns + ") " +
                     "VALUES (?, ?, ?, ?" + additionalAttributeValues + ")"
             )
         ) {

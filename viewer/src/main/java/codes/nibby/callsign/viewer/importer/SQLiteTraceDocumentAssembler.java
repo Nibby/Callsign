@@ -2,10 +2,7 @@ package codes.nibby.callsign.viewer.importer;
 
 import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.viewer.misc.ProgressReporter;
-import codes.nibby.callsign.viewer.models.SQLiteTraceDocument;
-import codes.nibby.callsign.viewer.models.TraceDocument;
-import codes.nibby.callsign.viewer.models.WritableSQLiteTraceDocument;
-import codes.nibby.callsign.viewer.models.WritableTraceDocument;
+import codes.nibby.callsign.viewer.models.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,6 +20,12 @@ public final class SQLiteTraceDocumentAssembler implements TraceDocumentAssemble
         WritableTraceDocument document = createDigestDocument(options.outputFile, progressReporter);
 
         importTraceData(document, options.inputTraceFiles, totalEventCount, progressReporter);
+
+        try {
+            document.unload();
+        } catch (TraceDocumentAccessException e) {
+            throw new IOException(e);
+        }
 
         return new SQLiteTraceDocument(options.outputFile);
     }

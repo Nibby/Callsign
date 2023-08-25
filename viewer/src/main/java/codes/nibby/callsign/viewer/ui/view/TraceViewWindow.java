@@ -1,6 +1,7 @@
 package codes.nibby.callsign.viewer.ui.view;
 
 import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.TraceDocumentAccessException;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -24,6 +25,13 @@ public final class TraceViewWindow {
     }
 
     public void initialize(TraceDocument document) {
+
+        try {
+            document.load();
+        } catch (TraceDocumentAccessException e) {
+            throw new RuntimeException(e);
+        }
+
         content.setDocument(document);
     }
 

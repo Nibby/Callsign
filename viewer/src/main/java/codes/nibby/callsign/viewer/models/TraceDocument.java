@@ -1,15 +1,14 @@
 package codes.nibby.callsign.viewer.models;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.function.Consumer;
 
 public interface TraceDocument {
 
-    void load() throws IOException;
+    void load() throws TraceDocumentAccessException;
 
-    void unload();
+    void unload() throws TraceDocumentAccessException;
 
-    long getEarliestEventTimeNs();
-
-    long getLatestEventTimeNs();
+    void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEntry> consumer) throws TraceDocumentAccessException;
 
 }

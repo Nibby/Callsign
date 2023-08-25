@@ -44,7 +44,7 @@ public final class ProgressDialog implements ProgressReporter {
 
         dialog = new Dialog<>();
         dialog.setDialogPane(dialogContent);
-        dialog.setOnCloseRequest(event -> requestCancellation());
+        dialog.setOnCloseRequest(event -> cancel());
     }
 
     public void show() {
@@ -93,7 +93,6 @@ public final class ProgressDialog implements ProgressReporter {
         messageLabel.setText(message == null ? "" : message);
     }
 
-    @Override
     public void cancel() {
         canceled = true;
     }

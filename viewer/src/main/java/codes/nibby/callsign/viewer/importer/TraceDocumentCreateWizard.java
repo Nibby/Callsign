@@ -138,7 +138,7 @@ public final class TraceDocumentCreateWizard {
             progressDialog.notifyComplete();
         }
 
-        controller.openExplorer(assembledDocument);
+        controller.openTraceViewer(assembledDocument);
     }
 
     private static boolean isSupportedExtension(File file, List<String> supportedExtensions) {

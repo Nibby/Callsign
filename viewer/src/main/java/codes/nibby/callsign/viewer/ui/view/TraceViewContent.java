@@ -4,9 +4,6 @@ import codes.nibby.callsign.viewer.models.TraceDocument;
 import codes.nibby.callsign.viewer.ui.CanvasContainer;
 import javafx.scene.layout.BorderPane;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public final class TraceViewContent {
 
     private final BorderPane contentPane;
@@ -45,21 +42,8 @@ public final class TraceViewContent {
         //       2. Based on the timeline in view port, craft filters for selecting trace entries in the document
         //       3. Stream each filtered trace entry from the document & paint it to an off-screen image
         //       4. Paint the off-screen image to canvas
-        var parameters = new TraceViewPaintParameters();
-        var filters = new ArrayList<>(1);
-//
-//        long earliestEventTimeNs = Long.MIN_VALUE;
-//        long latestEventTimeNs = Long.MIN_VALUE;
-//
-//        if (document != null) {
-//            earliestEventTimeNs = document.getEarliestEventTimeNs();
-//            latestEventTimeNs = document.getLatestEventTimeNs();
-//        }
-//
-//        contentLayoutManager.computeParametersForViewport(width, height, earliestEventTimeNs, latestEventTimeNs);
-//
 
-        canvas.paint(parameters);
+        canvas.paint(document);
     }
 
     public BorderPane getComponent() {

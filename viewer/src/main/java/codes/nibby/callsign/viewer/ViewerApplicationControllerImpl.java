@@ -17,11 +17,11 @@ final class ViewerApplicationControllerImpl implements ViewerApplicationControll
     }
 
     @Override
-    public void openExplorer(TraceDocument document) {
-        UIHelper.runOnFxApplicationThread(() -> _openExplorer(document));
+    public void openTraceViewer(TraceDocument document) {
+        UIHelper.runOnFxApplicationThread(() -> _openTraceViewer(document));
     }
 
-    private void _openExplorer(TraceDocument document) {
+    private void _openTraceViewer(TraceDocument document) {
         application.hideLandingScreen();
 
         TraceViewWindow window = openWindows.computeIfAbsent(document, key -> {
@@ -32,21 +32,21 @@ final class ViewerApplicationControllerImpl implements ViewerApplicationControll
         });
 
         window.setOnClose(() -> UIHelper.runOnFxApplicationThread(() ->
-            handleExplorerWindowClosed(document)
+            nandleTraceViewerClosed(document)
         ));
         window.show();
     }
 
     @Override
-    public void closeExplorer(TraceDocument document) {
-        UIHelper.runOnFxApplicationThread(() -> _closeExplorer(document));
+    public void closeTraceViewer(TraceDocument document) {
+        UIHelper.runOnFxApplicationThread(() -> _closeTraceViewer(document));
     }
 
-    private void _closeExplorer(TraceDocument document) {
-        handleExplorerWindowClosed(document);
+    private void _closeTraceViewer(TraceDocument document) {
+        nandleTraceViewerClosed(document);
     }
 
-    private void handleExplorerWindowClosed(TraceDocument document) {
+    private void nandleTraceViewerClosed(TraceDocument document) {
         openWindows.remove(document);
 
         if (openWindows.isEmpty()) {

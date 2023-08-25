@@ -1,6 +1,6 @@
 package codes.nibby.callsign.viewer.models;
 
-public interface Filter {
+public interface TraceEntryFilter {
 
 
 
