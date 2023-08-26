@@ -49,7 +49,7 @@ class TimelineLoggerTest {
 
         val timedEvent = timeline.recordEventStart(name)
 
-        Assertions.assertEquals(name, timedEvent.name)
+        Assertions.assertEquals(name, timedEvent.getName())
     }
 
     @Test

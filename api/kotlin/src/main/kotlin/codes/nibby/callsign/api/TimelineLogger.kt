@@ -14,7 +14,7 @@ class TimelineLogger(internal val sink: TimelineLogSink) {
     fun recordEventEnd(event: TimedEvent) {
         synchronized(event.lock) {
             if (event.saved) {
-                throw IllegalStateException("recordEventEnd() cannot be called twice for event: " + event.name)
+                throw IllegalStateException("recordEventEnd() cannot be called twice for event: " + event.getName())
             }
 
             event.endTimeNs = System.nanoTime()
@@ -27,7 +27,7 @@ class TimelineLogger(internal val sink: TimelineLogSink) {
     fun recordEvent(event: InstantEvent) {
         synchronized(event.lock) {
             if (event.saved) {
-                throw IllegalStateException("recordEvent() cannot be called twice for event: " + event.name)
+                throw IllegalStateException("recordEvent() cannot be called twice for event: " + event.getName())
             }
 
             event.saved = true

@@ -6,8 +6,6 @@ class InstantEvent(name: String, val timeNs: Long) : Event(TYPE, name) {
         const val TYPE = "i"
     }
 
-    constructor(name: String) : this(name, System.nanoTime()) {
-
-    }
+    constructor(name: String) : this(name, System.nanoTime())
 
 }

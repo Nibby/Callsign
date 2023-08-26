@@ -1,6 +1,6 @@
 package codes.nibby.callsign.api
 
-abstract class Event(val type: String, val name: String) {
+abstract class Event(val type: String, name: String) {
 
     private val attributeData = AttributeData(HashMap())
     internal var saved: Boolean = false
@@ -8,10 +8,15 @@ abstract class Event(val type: String, val name: String) {
     internal val lock = Object()
 
     init {
-        assertValidName(name, MAX_EVENT_NAME_LENGTH);
+        assertValidName(name, MAX_EVENT_NAME_LENGTH - 1)
+        attributeData.map[RESERVED_NAME_ATTRIBUTE] = name
     }
 
-    fun putAttribute(name: String, attribute: String) {
+    fun getName() : String {
+        return getAttribute(RESERVED_NAME_ATTRIBUTE)!!
+    }
+
+    fun putAttribute(name: String, value: String) {
         synchronized(lock) {
             if (saved) {
                 throw IllegalStateException("Attempting to modify event after it has been saved: $name")
@@ -20,7 +25,7 @@ abstract class Event(val type: String, val name: String) {
 
         assertValidName(name, MAX_ATTRIBUTE_NAME_LENGTH);
 
-        attributeData.map[name] = attribute
+        attributeData.map[name] = value
     }
 
     fun getAttribute(name: String) : String? {
@@ -28,7 +33,7 @@ abstract class Event(val type: String, val name: String) {
     }
 
     fun getAttributeNames() : Set<String> {
-        return attributeData.map.keys;
+        return attributeData.map.keys
     }
 
     internal fun getAttributeData(): AttributeData {
@@ -46,7 +51,10 @@ abstract class Event(val type: String, val name: String) {
     }
 
     companion object {
-        val MAX_EVENT_NAME_LENGTH = 1024
-        val MAX_ATTRIBUTE_NAME_LENGTH = 128
+        const val MAX_EVENT_NAME_LENGTH = 1024
+        const val MAX_ATTRIBUTE_NAME_LENGTH = 128
+
+        private const val RESERVED_ATTRIBUTE_NAME_PREFIX = "$"
+        const val RESERVED_NAME_ATTRIBUTE = RESERVED_ATTRIBUTE_NAME_PREFIX + "event_name"
     }
 }

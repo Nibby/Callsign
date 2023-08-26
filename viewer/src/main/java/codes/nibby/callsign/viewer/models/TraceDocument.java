@@ -9,6 +9,10 @@ public interface TraceDocument {
 
     void unload() throws TraceDocumentAccessException;
 
-    void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEntry> consumer) throws TraceDocumentAccessException;
+    void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEvent> consumer) throws TraceDocumentAccessException;
+
+    long getEarliestEventStartTimeNs();
+
+    long getLatestEventEndTimeNs();
 
 }

@@ -2,12 +2,12 @@ package codes.nibby.callsign.viewer.models;
 
 import java.util.Map;
 
-public final class InstantTraceEntry extends TraceEntry {
+public final class InstantTraceEvent extends TraceEvent {
 
     private final long timeNs;
 
-    public InstantTraceEntry(String name, Map<String, String> attributes, long timeNs) {
-        super(name, attributes);
+    public InstantTraceEvent(Map<String, String> attributes, long timeNs) {
+        super(attributes);
         this.timeNs = timeNs;
     }
 

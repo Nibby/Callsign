@@ -1,14 +1,12 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-import codes.nibby.callsign.viewer.models.TraceDocument;
-import codes.nibby.callsign.viewer.models.TraceDocumentAccessException;
+import codes.nibby.callsign.viewer.models.InstantTraceEvent;
+import codes.nibby.callsign.viewer.models.TimedTraceEvent;
+import codes.nibby.callsign.viewer.models.TraceEvent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
 
 final class TraceViewCanvas extends Canvas {
 
@@ -18,19 +16,44 @@ final class TraceViewCanvas extends Canvas {
         this.graphics = getGraphicsContext2D();
     }
 
-    public void paint(TraceDocument document) {
-        graphics.clearRect(0, 0, getWidth(), getHeight());
+    public void paint(TraceViewViewport viewport, TraceEventCollection viewableEvents, TraceViewColorScheme colorScheme) {
+        graphics.setFill(colorScheme.getBackground());
+        graphics.fillRect(0, 0, viewport.getWidth(), viewport.getHeight());
 
-        var entryCount = new AtomicInteger();
+        Map<Track, TrackData> trackData = viewableEvents.getTrackData();
+        int trackIndex = 0;
 
-        try {
-            document.streamEntries(new ArrayList<>(), entry -> {
-                graphics.setFill(Color.BLUE);
-                graphics.fillRect(entryCount.get() * 10, entryCount.get() * 10, 10, 10);
-                entryCount.incrementAndGet();
-            });
-        } catch (TraceDocumentAccessException e) {
-            throw new RuntimeException(e);
+        for (Track track : trackData.keySet()) {
+            paintTrack(viewport, trackIndex, track, trackData.get(track), colorScheme);
+            trackIndex++;
+        }
+    }
+
+    private void paintTrack(TraceViewViewport viewport, int trackIndex, Track track, TrackData trackData, TraceViewColorScheme colorScheme) {
+        double trackHeight = viewport.getTrackHeight();
+        double yStart = viewport.getTrackStartDisplayY(trackIndex);
+
+        for (TraceEvent trace : trackData.getTraces()) {
+
+            if (trace instanceof TimedTraceEvent timedTrace) {
+
+                // TODO: Oh no I dun goofed...
+                if (timedTrace.getEndTimeNs() < 0) {
+                    continue;
+                }
+                graphics.setFill(colorScheme.getTimedTraceEventBackground());
+
+                double xStart = viewport.getDisplayX(timedTrace.getStartTimeNs());
+                double xEnd = viewport.getDisplayX(timedTrace.getEndTimeNs());
+
+                graphics.fillRect(xStart, yStart, xEnd, trackHeight);
+            } else if (trace instanceof InstantTraceEvent instantTrace) {
+                graphics.setFill(colorScheme.getInstantTraceEventBackground());
+
+                double xStart = viewport.getDisplayX(instantTrace.getTimeNs());
+
+                graphics.fillOval(xStart - 20, yStart + trackHeight / 2 - 20, 40, 40);
+            }
         }
     }
 }

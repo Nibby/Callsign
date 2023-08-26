@@ -32,7 +32,7 @@ final class ViewerApplicationControllerImpl implements ViewerApplicationControll
         });
 
         window.setOnClose(() -> UIHelper.runOnFxApplicationThread(() ->
-            nandleTraceViewerClosed(document)
+            handleTraceViewerClosed(document)
         ));
         window.show();
     }
@@ -43,14 +43,14 @@ final class ViewerApplicationControllerImpl implements ViewerApplicationControll
     }
 
     private void _closeTraceViewer(TraceDocument document) {
-        nandleTraceViewerClosed(document);
+        handleTraceViewerClosed(document);
     }
 
-    private void nandleTraceViewerClosed(TraceDocument document) {
+    private void handleTraceViewerClosed(TraceDocument document) {
         openWindows.remove(document);
 
         if (openWindows.isEmpty()) {
-            System.exit(0);
+            application.showLandingScreen();
         }
     }
 }

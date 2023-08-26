@@ -34,9 +34,9 @@ class CsvFormat {
 
             return listOf(
                 event.type,
-                event.name,
-                if (event.startTimeNs != null) event.startTimeNs.toString() else Long.MIN_VALUE.toString(),
-                if (event.endTimeNs != null) event.endTimeNs.toString() else Long.MAX_VALUE.toString(),
+                event.getName(),
+                if (event.startTimeNs != null) event.startTimeNs.toString() else Long.MAX_VALUE.toString(),
+                if (event.endTimeNs != null) event.endTimeNs.toString() else Long.MIN_VALUE.toString(),
                 attributeData
             )
         }
@@ -47,7 +47,7 @@ class CsvFormat {
 
             return listOf(
                 event.type,
-                event.name,
+                event.getName(),
                 event.timeNs.toString(),
                 "",
                 attributeData

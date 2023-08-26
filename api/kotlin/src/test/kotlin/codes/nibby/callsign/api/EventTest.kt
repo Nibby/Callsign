@@ -49,7 +49,7 @@ class EventTest {
 
         val event = TestEvent("normal name")
 
-        Assertions.assertEquals(name, event.name)
+        Assertions.assertEquals(name, event.getName())
     }
 
     @Test
@@ -177,7 +177,7 @@ class EventTest {
         Assertions.assertEquals(value, retrievedValue)
     }
 
-    private class TestEvent(name: String) : Event(name) {
+    private class TestEvent(name: String) : Event("test", name) {
 
     }
 }

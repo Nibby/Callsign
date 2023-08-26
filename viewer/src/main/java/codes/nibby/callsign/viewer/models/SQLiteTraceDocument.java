@@ -17,8 +17,15 @@ import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.Even
 
 public class SQLiteTraceDocument implements TraceDocument {
 
+    public static final long UNDEFINED_EARLIEST_EVENT_START_TIME_NS = Long.MAX_VALUE;
+    public static final long UNDEFINED_LATEST_EVENT_END_TIME_NS = Long.MIN_VALUE;
+
     protected final Path path;
     protected Connection connection;
+
+    protected long earliestEventStartTimeNs = UNDEFINED_EARLIEST_EVENT_START_TIME_NS;
+    protected long latestEventEndTimeNs = UNDEFINED_LATEST_EVENT_END_TIME_NS;
+    protected boolean hasMetadataRow = false;
 
     protected final Object stateLock = new Object();
 
@@ -34,8 +41,23 @@ public class SQLiteTraceDocument implements TraceDocument {
 
         try {
             openConnection();
+            loadMetadata();
         } catch (SQLException e) {
             throw new TraceDocumentAccessException("Failed to load document", e);
+        }
+    }
+
+    private void loadMetadata() throws SQLException {
+        assertLoaded();
+
+        try (Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM " + Schema.MetadataTable.TABLE_NAME);
+
+            if (resultSet.next()) {
+                earliestEventStartTimeNs = resultSet.getLong(Schema.MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS);
+                latestEventEndTimeNs = resultSet.getLong(Schema.MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS);
+                hasMetadataRow = true;
+            }
         }
     }
 
@@ -45,6 +67,9 @@ public class SQLiteTraceDocument implements TraceDocument {
             try {
                 connection.close();
                 connection = null;
+
+                earliestEventStartTimeNs = UNDEFINED_EARLIEST_EVENT_START_TIME_NS;
+                latestEventEndTimeNs = UNDEFINED_LATEST_EVENT_END_TIME_NS;
             } catch (SQLException e) {
                 throw new TraceDocumentAccessException("Failed to close SQLite connection", e);
             }
@@ -52,7 +77,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     }
 
     @Override
-    public void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEntry> consumer) throws TraceDocumentAccessException {
+    public void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEvent> consumer) throws TraceDocumentAccessException {
         assertLoaded();
 
         // TODO: Convert filter settings into SQL condition
@@ -73,6 +98,18 @@ public class SQLiteTraceDocument implements TraceDocument {
         }
     }
 
+    @Override
+    public long getEarliestEventStartTimeNs() {
+        assertLoaded();
+        return earliestEventStartTimeNs;
+    }
+
+    @Override
+    public long getLatestEventEndTimeNs() {
+        assertLoaded();
+        return latestEventEndTimeNs;
+    }
+
     private AttributeHeaderData loadAttributeHeaderData(Statement statement) throws SQLException {
         var headerData = new AttributeHeaderData();
 
@@ -88,14 +125,13 @@ public class SQLiteTraceDocument implements TraceDocument {
         return headerData;
     }
 
-    private void processTraceEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEntry> consumer) throws SQLException {
+    private void processTraceEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
         String type = resultSet.getString(EventsTable.COLUMN_EVENT_TYPE);
-        String name = resultSet.getString(EventsTable.COLUMN_EVENT_NAME);
 
         long startTimeNs = resultSet.getLong(EventsTable.COLUMN_START_TIME_NS);
         long endTimeNs = resultSet.getLong(EventsTable.COLUMN_END_TIME_NS);
 
-        boolean validEntry = false;
+        boolean validEntry;
 
         if (InstantEvent.TYPE.equals(type) || TimedEvent.TYPE.equals(type)) {
             validEntry = true;
@@ -104,6 +140,7 @@ public class SQLiteTraceDocument implements TraceDocument {
         } else {
             // TODO: Handle this better
             System.err.println("Ignored an event with NULL type");
+            validEntry = false;
         }
 
         if (!validEntry) {
@@ -111,12 +148,12 @@ public class SQLiteTraceDocument implements TraceDocument {
         }
 
         Map<String, String> attributes = loadTraceEntryAttributes(resultSet, headerData);
-        TraceEntry entry;
+        TraceEvent entry;
 
         if (InstantEvent.TYPE.equals(type)) {
-            entry = new InstantTraceEntry(name, attributes, startTimeNs);
+            entry = new InstantTraceEvent(attributes, startTimeNs);
         } else if (TimedEvent.TYPE.equals(type)) {
-            entry = new TimedTraceEntry(name, attributes,  startTimeNs, endTimeNs);
+            entry = new TimedTraceEvent(attributes,  startTimeNs, endTimeNs);
         } else {
             throw new IllegalStateException();
         }
@@ -175,7 +212,6 @@ public class SQLiteTraceDocument implements TraceDocument {
 
             static final String COLUMN_ID = "id";
             static final String COLUMN_EVENT_TYPE = "event_type";
-            static final String COLUMN_EVENT_NAME = "event_name";
             static final String COLUMN_START_TIME_NS = "start_time_ns";
             static final String COLUMN_END_TIME_NS = "end_time_ns";
         }
@@ -186,6 +222,14 @@ public class SQLiteTraceDocument implements TraceDocument {
             static final String COLUMN_ID = "id";
             static final String COLUMN_COLUMN_NAME = "column_name";
             static final String COLUMN_ATTRIBUTE_NAME = "attribute_name";
+        }
+
+        static final class MetadataTable {
+            static final String TABLE_NAME = "metadata";
+
+            static final String COLUMN_ID = "id";
+            static final String COLUMN_EARLIEST_EVENT_START_TIME_NS = "earliest_event_start_time_ns";
+            static final String COLUMN_LATEST_EVENT_END_TIME_NS = "latest_event_end_time_ns";
         }
     }
 

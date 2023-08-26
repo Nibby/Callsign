@@ -1,17 +1,18 @@
 package codes.nibby.callsign.viewer.models;
 
+import codes.nibby.callsign.api.Event;
+
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-public abstract class TraceEntry {
+public abstract class TraceEvent {
 
     private final String name;
     private final Map<String, String> attributes;
 
-    public TraceEntry(String name, Map<String, String> attributes) {
-        this.name = name;
+    public TraceEvent(Map<String, String> attributes) {
         this.attributes = attributes;
+        this.name = attributes.get(Event.RESERVED_NAME_ATTRIBUTE);
     }
 
     public String getName() {
