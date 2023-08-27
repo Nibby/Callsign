@@ -23,12 +23,6 @@ class InstantEvent(
         const val TYPE = "i"
     }
 
-    /**
-     * Constructs an instant event whose event time is generated at the time of this object's
-     * creation.
-     *
-     * @param name Name of this event
-     */
-    constructor(name: String) : this(null, name, System.nanoTime())
+    constructor(name: String, timeNs: Long) : this(null, name, timeNs)
 
 }

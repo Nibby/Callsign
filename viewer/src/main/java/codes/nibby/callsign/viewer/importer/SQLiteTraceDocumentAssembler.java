@@ -17,7 +17,7 @@ public final class SQLiteTraceDocumentAssembler implements TraceDocumentAssemble
     public TraceDocument assemble(AssemblyOptions options, ProgressReporter progressReporter) throws IOException {
         long totalEventCount = performInitialPass(options.inputTraceFiles, progressReporter);
 
-        WritableTraceDocument document = createDigestDocument(options.outputFile, progressReporter);
+        WritableTraceDocument document = createTraceDocument(options.outputFile, progressReporter);
 
         importTraceData(document, options.inputTraceFiles, totalEventCount, progressReporter);
 
@@ -65,7 +65,7 @@ public final class SQLiteTraceDocumentAssembler implements TraceDocumentAssemble
         return counter.get();
     }
 
-    private WritableTraceDocument createDigestDocument(Path outputFile, ProgressReporter progressReporter) throws IOException {
+    private WritableTraceDocument createTraceDocument(Path outputFile, ProgressReporter progressReporter) throws IOException {
         var document = new WritableSQLiteTraceDocument(outputFile);
         document.initialize();
 

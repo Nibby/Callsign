@@ -24,4 +24,6 @@ class IntervalStartEvent internal constructor(
         const val TYPE = "t-s"
     }
 
+    constructor(name: String, timeNs: Long) : this(null, name, timeNs)
+
 }

@@ -3,6 +3,7 @@ package codes.nibby.callsign.api
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
+import kotlin.system.measureNanoTime
 
 class TimelineLoggerTest {
 
@@ -108,7 +109,7 @@ class TimelineLoggerTest {
 
     @Test
     fun testRecordEvent_marksEventAsSaved() {
-        val event = InstantEvent("myEvent")
+        val event = InstantEvent("myEvent", System.nanoTime())
         val timeline = TimelineLogger(TestSink())
 
         timeline.recordEvent(event)
@@ -118,7 +119,7 @@ class TimelineLoggerTest {
 
     @Test
     fun testRecordEvent_invokesSinkWriterMethod() {
-        val event = InstantEvent("myEvent")
+        val event = InstantEvent("myEvent", System.nanoTime())
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
 
@@ -129,7 +130,7 @@ class TimelineLoggerTest {
 
     @Test
     fun testRecordEvent_methodCalledTwiceForSameEvent_fails() {
-        val event = InstantEvent("myEvent")
+        val event = InstantEvent("myEvent", System.nanoTime())
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
 

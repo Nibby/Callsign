@@ -71,8 +71,15 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             ")"
         );
 
-        statement.execute("CREATE INDEX index_column_name ON " + AttributeHeaderTable.TABLE_NAME + " (" + AttributeHeaderTable.COLUMN_COLUMN_NAME + ")");
-        statement.execute("CREATE INDEX index_attribute_name ON " + AttributeHeaderTable.TABLE_NAME + " (" + AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME + ")");
+        statement.execute(
+            "CREATE INDEX index_column_name " +
+            "ON " + AttributeHeaderTable.TABLE_NAME + " (" + AttributeHeaderTable.COLUMN_COLUMN_NAME + ")"
+        );
+
+        statement.execute(
+            "CREATE INDEX index_attribute_name " +
+            "ON " + AttributeHeaderTable.TABLE_NAME + " (" + AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME + ")"
+        );
     }
 
     private void createEventsTable(Statement statement) throws SQLException {
@@ -80,12 +87,14 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             "CREATE TABLE " + EventsTable.TABLE_NAME +
             "(" +
                 EventsTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                EventsTable.COLUMN_EVENT_ID + " TEXT NOT NULL," +
+                EventsTable.COLUMN_CORRELATION_ID + " TEXT NULL," +
                 EventsTable.COLUMN_EVENT_TYPE + " TEXT NOT NULL," +
-                EventsTable.COLUMN_CORRELATION_ID + " TEXT NOT NULL," +
                 EventsTable.COLUMN_TIME_NS + " INTEGER NULL" +
             ")"
         );
 
+        statement.execute("CREATE INDEX index_event_id ON event_data (" + EventsTable.COLUMN_EVENT_ID + ")");
         statement.execute("CREATE INDEX index_time_ns ON event_data (" + EventsTable.COLUMN_TIME_NS + ")");
         statement.execute("CREATE INDEX correlation_id ON event_data (" + EventsTable.COLUMN_CORRELATION_ID + ")");
     }
@@ -146,7 +155,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
 
                 appendEventImpl(event);
             } catch (SQLException e) {
-                throw new IOException(e);
+                throw new IOException("An error occurred appending event", e);
             }
         }
     }
@@ -178,8 +187,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         for (String newColumnName : newColumnNames) {
             try (Statement statement = connection.createStatement()) {
                 statement.execute(
-                    "ALTER TABLE " + EventsTable.TABLE_NAME
-                        + " ADD COLUMN " + newColumnName + " TEXT NULL"
+                    "ALTER TABLE " + EventsTable.TABLE_NAME + " ADD COLUMN " + newColumnName + " TEXT NULL"
                 );
             }
         }
@@ -191,7 +199,8 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
 
         Map<Integer, String> parameterOffsetToAttributeName = new HashMap<>(attributeNameLookup.size());
 
-        int i = 0;
+        int offset = 0;
+
         for (var entry  : attributeNameLookup.entrySet()) {
             String columnName = entry.getKey();
             String attributeName = entry.getValue();
@@ -199,22 +208,27 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             additionalAttributeColumns.append(", ").append(columnName);
             additionalAttributeValues.append(", ?");
 
-            parameterOffsetToAttributeName.put(i, attributeName);
+            parameterOffsetToAttributeName.put(offset, attributeName);
 
-            i++;
+            offset++;
         }
 
-        try (
-            PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO " + EventsTable.TABLE_NAME + "(" +
-                    EventsTable.COLUMN_EVENT_TYPE + ", " +
-                    EventsTable.COLUMN_TIME_NS + ", " +
-                    additionalAttributeColumns + ") " +
-                    "VALUES (?, ?" + additionalAttributeValues + ")"
-            )
-        ) {
+        String query =
+            "INSERT INTO " + EventsTable.TABLE_NAME +
+            "(" +
+                EventsTable.COLUMN_EVENT_ID + ", " +
+                EventsTable.COLUMN_CORRELATION_ID + ", " +
+                EventsTable.COLUMN_EVENT_TYPE + ", " +
+                EventsTable.COLUMN_TIME_NS +
+                additionalAttributeColumns +
+            ") " +
+            "VALUES (?, ?, ?, ?" + additionalAttributeValues + ")";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             int index = 1;
 
+            statement.setString(index++, event.getId().toString());
+            statement.setString(index++, event.getCorrelationId() != null ? event.getCorrelationId().toString() : null);
             statement.setString(index++, event.getType());
 
             long timeNs = event.getTimeNs();
@@ -231,13 +245,17 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             }
 
             for (var attributeEntry : parameterOffsetToAttributeName.entrySet()) {
-                int offset = attributeEntry.getKey();
+                int columnOffset = attributeEntry.getKey();
                 String attributeName = attributeEntry.getValue();
 
-                statement.setString(index + offset, event.getAttribute(attributeName));
+                statement.setString(index + columnOffset, event.getAttribute(attributeName));
             }
 
             statement.execute();
+        } catch (SQLException e) {
+            // TODO: Better error logging
+            System.err.println("Failed to execute query:\n" + query);
+            throw e;
         }
     }
 
@@ -266,10 +284,11 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
 
     private void createMetadataRow() throws SQLException {
         try (var statement = connection.prepareStatement(
-            "INSERT INTO " + MetadataTable.TABLE_NAME + " (" +
+            "INSERT INTO " + MetadataTable.TABLE_NAME +
+            " (" +
                 MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS + ", " +
                 MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS +
-                ") VALUES (?, ?)"
+            ") VALUES (?, ?)"
         )) {
             int index = 1;
 
@@ -289,7 +308,8 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             "UPDATE " + MetadataTable.TABLE_NAME + " SET " +
                 MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS + " = ?, " +
                 MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS + " = ?" +
-            " WHERE 1 = 1" // Update all rows, in case there's more than 1, or the ID=1 row got deleted before (shouldn't happen, but you never know)
+            " WHERE 1 = 1" // Update all rows, in case there's more than 1, or the ID=1 row got deleted before
+                           // (shouldn't happen, but you never know)
         )) {
             int index = 1;
 

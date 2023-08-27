@@ -1,6 +1,5 @@
 package codes.nibby.callsign.viewer.models;
 
-import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.api.InstantEvent;
 import codes.nibby.callsign.api.IntervalEndEvent;
 import codes.nibby.callsign.api.IntervalStartEvent;
@@ -19,14 +18,14 @@ import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.Even
 
 public class SQLiteTraceDocument implements TraceDocument {
 
-    public static final long UNDEFINED_EARLIEST_EVENT_START_TIME_NS = Long.MAX_VALUE;
-    public static final long UNDEFINED_LATEST_EVENT_END_TIME_NS = Long.MIN_VALUE;
+    public static final long UNDEFINED_START_TIME_NS = Long.MAX_VALUE;
+    public static final long UNDEFINED_END_TIME_NS = Long.MIN_VALUE;
 
     protected final Path path;
     protected Connection connection;
 
-    protected Long earliestEventStartTimeNs = UNDEFINED_EARLIEST_EVENT_START_TIME_NS;
-    protected Long latestEventEndTimeNs = UNDEFINED_LATEST_EVENT_END_TIME_NS;
+    protected Long earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
+    protected Long latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
     protected boolean hasMetadataRow = false;
 
     protected final Object stateLock = new Object();
@@ -70,8 +69,8 @@ public class SQLiteTraceDocument implements TraceDocument {
                 connection.close();
                 connection = null;
 
-                earliestEventStartTimeNs = UNDEFINED_EARLIEST_EVENT_START_TIME_NS;
-                latestEventEndTimeNs = UNDEFINED_LATEST_EVENT_END_TIME_NS;
+                earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
+                latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
             } catch (SQLException e) {
                 throw new TraceDocumentAccessException("Failed to close SQLite connection", e);
             }
@@ -82,59 +81,15 @@ public class SQLiteTraceDocument implements TraceDocument {
     public void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEvent> consumer) throws TraceDocumentAccessException {
         assertLoaded();
 
-        // TODO: Convert filter settings into SQL condition
-
         try (Statement statement = connection.createStatement()) {
-            // 1. Load attribute headers
             // TODO: Don't need to do this every time if document hasn't changed since it was loaded
             AttributeHeaderData headerData = loadAttributeHeaderData(statement);
 
-            // 2. Stream results
-            // Interval events are retrieved differently because of their complementary nature,
-            // so do the instant events first because they are the simplest.
-            ResultSet resultSet = statement.executeQuery(
-                "SELECT * FROM " + EventsTable.TABLE_NAME + " WHERE " + EventsTable.COLUMN_EVENT_TYPE + " = " + InstantEvent.TYPE
-            );
-
-            while (resultSet.next()) {
-                processInstantEventEntry(resultSet, headerData, consumer);
-            }
-
-            // 2 (cont.) Now stream interval events
-            String eventIdColumnName = headerData.getColumnName(Event.SPECIAL_ID_ATTRIBUTE).orElseThrow();
-
-            resultSet = statement.executeQuery(
-                "SELECT " +
-                    " start." + EventsTable.COLUMN_TIME_NS + ", " +
-                    " finish.* " +
-                "FROM " + EventsTable.TABLE_NAME + " start " +
-                    "JOIN " + EventsTable.TABLE_NAME + " finish " +
-                        "ON start." + eventIdColumnName + " = finish." + EventsTable.COLUMN_CORRELATION_ID
-            );
-
-            while (resultSet.next()) {
-                processIntervalEventEntry(resultSet, headerData, consumer);
-            }
-
+            streamInstantEvents(statement, headerData, filters, consumer);
+            streamTimedEvents(statement, headerData, filters, consumer);
         } catch (SQLException e) {
             throw new TraceDocumentAccessException(e);
         }
-    }
-
-    private void processIntervalEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) {
-
-    }
-
-    @Override
-    public long getEarliestEventStartTimeNs() {
-        assertLoaded();
-        return earliestEventStartTimeNs;
-    }
-
-    @Override
-    public long getLatestEventEndTimeNs() {
-        assertLoaded();
-        return latestEventEndTimeNs;
     }
 
     private AttributeHeaderData loadAttributeHeaderData(Statement statement) throws SQLException {
@@ -152,13 +107,28 @@ public class SQLiteTraceDocument implements TraceDocument {
         return headerData;
     }
 
-    private void processInstantEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
-        String type = resultSet.getString(EventsTable.COLUMN_EVENT_TYPE);
-        long timeNs = resultSet.getLong(EventsTable.COLUMN_TIME_NS);
+    private void streamInstantEvents(
+        Statement statement,
+        AttributeHeaderData headerData,
+        List<TraceEntryFilter> filters,
+        Consumer<TraceEvent> consumer
+    ) throws SQLException {
 
-        if (!InstantEvent.TYPE.equals(type)) {
-            return;
+        // TODO: Convert filter settings into SQL condition
+
+        ResultSet resultSet = statement.executeQuery(
+            "SELECT * " +
+            "FROM " + EventsTable.TABLE_NAME + " " +
+            "WHERE " + EventsTable.COLUMN_EVENT_TYPE + " = '" + InstantEvent.TYPE + "'"
+        );
+
+        while (resultSet.next()) {
+            processInstantEventEntry(resultSet, headerData, consumer);
         }
+    }
+
+    private void processInstantEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
+        long timeNs = resultSet.getLong(EventsTable.COLUMN_TIME_NS);
 
         Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
         TraceEvent entry = new InstantTraceEvent(attributes, timeNs);
@@ -189,6 +159,62 @@ public class SQLiteTraceDocument implements TraceDocument {
         return attributes;
     }
 
+    private void streamTimedEvents(
+        Statement statement,
+        AttributeHeaderData headerData,
+        List<TraceEntryFilter> filters,
+        Consumer<TraceEvent> consumer
+    ) throws SQLException {
+
+        // TODO: Convert filter settings into SQL condition
+
+        final String startEventPrefix = "start";
+        final String endEventPrefix = "finish";
+
+        ResultSet resultSet = statement.executeQuery(
+            "SELECT " +
+                " " + startEventPrefix + "." + EventsTable.COLUMN_TIME_NS + ", " +
+                " " + endEventPrefix + ".* " +
+            "FROM " + EventsTable.TABLE_NAME + " " + startEventPrefix + " " +
+            "JOIN " + EventsTable.TABLE_NAME + " " + endEventPrefix + " " +
+                "ON " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_ID + " = " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " " +
+            "WHERE " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_TYPE + " IN  ('" + IntervalStartEvent.TYPE + "', '" + IntervalEndEvent.TYPE + "')"
+        );
+
+        while (resultSet.next()) {
+            processIntervalEventEntry(resultSet, headerData, consumer);
+        }
+    }
+
+    private void processIntervalEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
+        int index = 1;
+        long startTimeNs = resultSet.getLong(index++);
+
+        if (startTimeNs == 0) {
+            // The event representing the start has probably been chopped off from the raw trace data
+            // so assume the event has started some unknown time ago
+            startTimeNs = UNDEFINED_START_TIME_NS;
+        }
+
+        index++; // skip endEvent.id
+        index++; // skip endEvent.event_id
+        index++; // skip endEvent.correlation_id
+
+        long endTimeNs = resultSet.getLong(index++);
+
+        if (endTimeNs == 0) {
+            // The event representing the completion has not been received according to the raw trace
+            // data, so assume the event is still ongoing
+            endTimeNs = UNDEFINED_END_TIME_NS;
+        }
+
+        Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
+
+        TraceEvent entry = new TimedTraceEvent(attributes, startTimeNs, endTimeNs);
+
+        consumer.accept(entry);
+    }
+
     private void assertLoaded() {
         synchronized (stateLock) {
             if (connection == null) {
@@ -210,14 +236,27 @@ public class SQLiteTraceDocument implements TraceDocument {
         }
     }
 
+    @Override
+    public long getEarliestEventStartTimeNs() {
+        assertLoaded();
+        return earliestEventStartTimeNs;
+    }
+
+    @Override
+    public long getLatestEventEndTimeNs() {
+        assertLoaded();
+        return latestEventEndTimeNs;
+    }
+
     // TODO: Probably need to version these later
     protected static final class Schema {
         static final class EventsTable {
             static final String TABLE_NAME = "event_data";
 
             static final String COLUMN_ID = "id";
-            static final String COLUMN_EVENT_TYPE = "event_type";
+            static final String COLUMN_EVENT_ID = "event_id";
             static final String COLUMN_CORRELATION_ID = "correlation_id";
+            static final String COLUMN_EVENT_TYPE = "event_type";
             static final String COLUMN_TIME_NS = "time_ns";
         }
 

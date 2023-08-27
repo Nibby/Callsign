@@ -65,7 +65,7 @@ class CsvFileSinkTest {
     @Test
     fun testConstructor_outputFileExists_preservesExistingContent() {
         val sink = CsvFileSink(testDataFolder, "testFile")
-        sink.publishEvent(InstantEvent("Test"))
+        sink.publishEvent(InstantEvent("Test", System.nanoTime()))
 
         val fileLengthInFirstSession = sink.outputFile.toFile().length()
 
@@ -81,7 +81,7 @@ class CsvFileSinkTest {
         val sink = CsvFileSink(testDataFolder, "testFile")
 
         testWritesDataEveryCall(sink) {
-            sink.publishEvent(InstantEvent("Test"))
+            sink.publishEvent(InstantEvent("Test", System.nanoTime()))
         }
     }
 

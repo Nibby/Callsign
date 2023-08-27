@@ -88,7 +88,7 @@ public final class TraceDocumentCreateWizard {
             return Optional.empty();
         }
 
-        var outputFile = Paths.get(System.getProperty("user.dir")).resolve("digest.cstd");
+        var outputFile = Paths.get(System.getProperty("user.dir")).resolve("digest.ctd");
 
         if (Files.exists(outputFile)) {
             try {
