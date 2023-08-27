@@ -33,10 +33,11 @@ import java.util.UUID
  * @see TimelineLogger
  */
 class IntervalEndEvent internal constructor(
+    existingId: UUID?,
+    correlationId: UUID,
     name: String,
-    timeNs: Long,
-    correlationId: UUID
-) : Event(TYPE, name, timeNs, correlationId) {
+    timeNs: Long
+) : Event(existingId, correlationId, TYPE, name, timeNs) {
 
     companion object {
         const val TYPE = "t-e"

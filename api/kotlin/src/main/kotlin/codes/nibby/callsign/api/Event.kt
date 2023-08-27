@@ -22,6 +22,13 @@ import kotlin.collections.HashMap
  * [TimelineLogSink] to store the event data into. Once an event has been logged, it is considered
  * "saved". Attempting to modify saved events will result in an exception.
  *
+ * @param existingId Unique identifier for this event. If null, a new ID will be generated for this event.
+ *                   This value should only be filled if the event is being loaded from a persisted source.
+ *                   All new events should have new generated IDs.
+ *
+ * @param correlationId Optional parameter. If this event is associated with another event, this is the
+ *                      [eventId] of the other event it is related to. Otherwise, leave null.
+ *
  * @param type Internal type code for this family of event. Must be unique among all families
  * @param name Name of this event, stored as a special attribute accessible from [getAttribute]
  * @param timeNs The approximate time (in nanoseconds) this event occurred on
@@ -31,10 +38,10 @@ import kotlin.collections.HashMap
  * @see IntervalEndEvent
  * @see TimelineLogger
  */
-abstract class Event(val type: String, name: String, val timeNs: Long, val correlationId: UUID?) {
+abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: String, name: String, val timeNs: Long) {
 
     /**
-     * A unique identifier for this event. May be used in attribute values to reference events
+     * A unique identifier for this event. May be referenced by other events [correlationId].
      */
     val id: UUID
 
@@ -52,8 +59,7 @@ abstract class Event(val type: String, name: String, val timeNs: Long, val corre
     init {
         putSpecialAttribute(SPECIAL_NAME_ATTRIBUTE, name)
 
-        id = UUID.randomUUID()
-        putSpecialAttribute(SPECIAL_ID_ATTRIBUTE, id.toString())
+        id = existingId ?: UUID.randomUUID()
     }
 
     /**
@@ -171,6 +177,5 @@ abstract class Event(val type: String, name: String, val timeNs: Long, val corre
         internal const val SPECIAL_ATTRIBUTE_NAME_PREFIX = "$"
 
         const val SPECIAL_NAME_ATTRIBUTE = SPECIAL_ATTRIBUTE_NAME_PREFIX + "event_name"
-        const val SPECIAL_ID_ATTRIBUTE = SPECIAL_ATTRIBUTE_NAME_PREFIX + "id"
     }
 }

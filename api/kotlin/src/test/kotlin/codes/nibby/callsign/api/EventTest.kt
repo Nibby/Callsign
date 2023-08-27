@@ -165,5 +165,5 @@ class EventTest {
     }
 
     private class TestEvent(name: String, timeNs: Long? = null)
-        : Event("test", name, timeNs ?: System.nanoTime(), null)
+        : Event(null, null, "test", name, timeNs ?: System.nanoTime())
 }

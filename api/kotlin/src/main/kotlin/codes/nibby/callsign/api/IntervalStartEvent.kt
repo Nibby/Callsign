@@ -1,5 +1,7 @@
 package codes.nibby.callsign.api
 
+import java.util.*
+
 /**
  * Represents an event that has a start and stop time. This event measures the starting point
  * of such an event. The counterpart to this event is [IntervalEndEvent].
@@ -12,7 +14,11 @@ package codes.nibby.callsign.api
  * @see Event
  * @see TimelineLogger
  */
-class IntervalStartEvent internal constructor(name: String, timeNs: Long) : Event(TYPE, name, timeNs, null) {
+class IntervalStartEvent internal constructor(
+    existingId: UUID?,
+    name: String,
+    timeNs: Long
+) : Event(existingId, null, TYPE, name, timeNs) {
 
     companion object {
         const val TYPE = "t-s"

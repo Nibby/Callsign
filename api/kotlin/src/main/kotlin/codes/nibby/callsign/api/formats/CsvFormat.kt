@@ -34,33 +34,39 @@ class CsvFormat {
             val attributeData = Json.encodeToString(AttributeData.serializer(), data)
 
             return listOf(
+                event.id.toString(),
+                event.correlationId?.toString() ?: "",
                 event.type,
                 event.name,
-                event.correlationId?.toString() ?: "",
                 event.timeNs.toString(),
                 attributeData
             )
         }
 
-        fun deserialize(csvRow: CsvRow): Event? {
+        fun deserialize(fields: List<String>): Event? {
+            val expectedFields = 6
+
+            if (fields.size != expectedFields) {
+                return null
+            }
+
             var index = 0
 
-            val eventType = csvRow.getField(index++)
-            val name = csvRow.getField(index++)
-            val correlationIdString = csvRow.getField(index++)
-            val timeNs = csvRow.getField(index++).toLong()
-            val attributeDataRaw = csvRow.getField(index)
+            val eventId = UUID.fromString(fields[index++])
+            val correlationIdString = fields[index++]
+            val eventType = fields[index++]
+            val name = fields[index++]
+            val timeNs = fields[index++].toLong()
+            val attributeDataRaw = fields[index]
 
             val correlationId: UUID? = if (correlationIdString.isBlank()) null else UUID.fromString(correlationIdString)
 
-            val event: Event
-
-            if (IntervalStartEvent.TYPE == eventType) {
-                event = IntervalStartEvent(name, timeNs)
+            val event: Event = if (IntervalStartEvent.TYPE == eventType) {
+                IntervalStartEvent(eventId, name, timeNs)
             } else if (IntervalEndEvent.TYPE == eventType) {
-                event = IntervalEndEvent(name, timeNs, correlationId!!)
+                IntervalEndEvent(eventId, correlationId!!, name, timeNs)
             } else if (InstantEvent.TYPE == eventType) {
-                event = InstantEvent(name, timeNs)
+                InstantEvent(eventId, name, timeNs)
             } else {
                 return null
             }

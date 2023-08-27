@@ -1,5 +1,7 @@
 package codes.nibby.callsign.api
 
+import java.util.*
+
 /**
  * Represents a one-off [Event] that occurred at a single point in time.
  *
@@ -11,7 +13,11 @@ package codes.nibby.callsign.api
  * @see IntervalEndEvent
  * @see TimelineLogger
  */
-class InstantEvent(name: String, timeNs: Long) : Event(TYPE, name, timeNs, null) {
+class InstantEvent(
+    existingId: UUID?,
+    name: String,
+    timeNs: Long
+) : Event(existingId, null, TYPE, name, timeNs) {
 
     companion object {
         const val TYPE = "i"
@@ -23,6 +29,6 @@ class InstantEvent(name: String, timeNs: Long) : Event(TYPE, name, timeNs, null)
      *
      * @param name Name of this event
      */
-    constructor(name: String) : this(name, System.nanoTime())
+    constructor(name: String) : this(null, name, System.nanoTime())
 
 }

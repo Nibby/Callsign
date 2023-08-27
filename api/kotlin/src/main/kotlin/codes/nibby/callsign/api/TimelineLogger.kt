@@ -29,7 +29,7 @@ class TimelineLogger(private val sink: TimelineLogSink) {
      */
     fun recordEventStart(name: String): IntervalStartEvent {
         val startTimeNs = System.nanoTime()
-        val event = IntervalStartEvent(name, startTimeNs);
+        val event = IntervalStartEvent(null, name, startTimeNs);
 
         sink.publishEvent(event)
 
@@ -56,7 +56,7 @@ class TimelineLogger(private val sink: TimelineLogSink) {
 
             event.saved = true
 
-            endEvent = IntervalEndEvent(event.name, endTimeNs, event.id)
+            endEvent = IntervalEndEvent(null, event.id, event.name, endTimeNs)
             endEvent.loadAttributeData(event.getAttributeData(), includeSpecialAttributes = false)
         }
 

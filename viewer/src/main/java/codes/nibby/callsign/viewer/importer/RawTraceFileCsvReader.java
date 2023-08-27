@@ -24,7 +24,7 @@ public final class RawTraceFileCsvReader implements RawTraceFileReader {
             var csvReader = CsvFormat.Companion.createReader(reader)
         ) {
             csvReader.stream().forEach(csvRow -> {
-                @Nullable var event = CsvFormat.Companion.deserialize(csvRow);
+                @Nullable var event = CsvFormat.Companion.deserialize(csvRow.getFields());
 
                 if (event != null) {
                     eventConsumer.accept(event);
