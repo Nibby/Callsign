@@ -1,38 +1,83 @@
 package codes.nibby.callsign.api
 
-class TimelineLogger(internal val sink: TimelineLogSink) {
+/**
+ * Main logging handler used to records time-based events to a [destination][TimelineLogSink].
+ *
+ * To record a one-off event, use [recordEvent]. For interval-based event logging, use [recordEventStart]
+ * and [recordEventEnd].
+ *
+ * @param sink Destination to store all recorded events
+ *
+ * @see Event
+ * @see InstantEvent
+ * @see IntervalStartEvent
+ * @see IntervalEndEvent
+ */
+class TimelineLogger(private val sink: TimelineLogSink) {
 
-    fun recordEventStart(name: String): TimedEvent {
+    /**
+     * Records the start of an interval-based event. Calling this method records a start event and
+     * returns an event reference. When the interval event completes some time later, call
+     * [recordEventEnd] with the same reference to complete the event.
+     *
+     * After [recordEventEnd] is called, the event reference should be discarded. Any attempt to
+     * modify it will fail.
+     *
+     * @param name Name of the event
+     *
+     * @return Reference of the new interval event
+     */
+    fun recordEventStart(name: String): IntervalStartEvent {
         val startTimeNs = System.nanoTime()
-        val event = TimedEvent(name, startTimeNs);
+        val event = IntervalStartEvent(name, startTimeNs);
 
-        sink.writeEventStart(event);
+        sink.publishEvent(event)
 
         return event;
     }
 
-    fun recordEventEnd(event: TimedEvent) {
+    /**
+     * Records the completion of a previously started interval-based event created from
+     * [recordEventStart].
+     *
+     * After this method, the event reference should be discarded. Any attempt to modify it will
+     * fail.
+     *
+     * @param event A previously recorded interval start event
+     */
+    fun recordEventEnd(event: IntervalStartEvent) {
+        val endTimeNs = System.nanoTime()
+        val endEvent: IntervalEndEvent
+
         synchronized(event.lock) {
             if (event.saved) {
-                throw IllegalStateException("recordEventEnd() cannot be called twice for event: " + event.getName())
+                throw IllegalStateException("recordEventEnd() cannot be called twice for event: " + event.name)
             }
 
-            event.endTimeNs = System.nanoTime()
             event.saved = true
+
+            endEvent = IntervalEndEvent(event.name, endTimeNs, event.id)
+            endEvent.loadAttributeData(event.getAttributeData(), includeSpecialAttributes = false)
         }
 
-        sink.writeEventEnd(event);
+        sink.publishEvent(endEvent)
     }
 
+    /**
+     * Records a one-off event that occurred on a single moment in time. This method must not be used more
+     * than once for any [InstantEvent] object.
+     *
+     * @param event The event to record.
+     */
     fun recordEvent(event: InstantEvent) {
         synchronized(event.lock) {
             if (event.saved) {
-                throw IllegalStateException("recordEvent() cannot be called twice for event: " + event.getName())
+                throw IllegalStateException("recordEvent() cannot be called twice for event: " + event.name)
             }
 
             event.saved = true
         }
 
-        sink.writeEvent(event);
+        sink.publishEvent(event)
     }
 }

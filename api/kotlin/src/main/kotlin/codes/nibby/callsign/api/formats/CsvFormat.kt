@@ -1,9 +1,7 @@
 package codes.nibby.callsign.api.formats
 
+import codes.nibby.callsign.api.*
 import codes.nibby.callsign.api.AttributeData
-import codes.nibby.callsign.api.Event
-import codes.nibby.callsign.api.InstantEvent
-import codes.nibby.callsign.api.TimedEvent
 import de.siegmar.fastcsv.reader.CsvReader
 import de.siegmar.fastcsv.reader.CsvRow
 import de.siegmar.fastcsv.writer.CsvWriter
@@ -12,13 +10,16 @@ import java.io.Reader
 import java.io.Writer
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 class CsvFormat {
 
     companion object {
 
-        val Charset: Charset = StandardCharsets.UTF_8
-        val Extension = "csff1"
+        /** Callsign Raw Trace (file format) 1 */
+        const val EXTENSION = "crt1"
+
+        val CHARSET: Charset = StandardCharsets.UTF_8
 
         fun createWriter(writer: Writer): CsvWriter {
             return CsvWriter.builder().build(writer)
@@ -28,57 +29,44 @@ class CsvFormat {
             return CsvReader.builder().build(reader)
         }
 
-        fun serialize(event: TimedEvent): List<String> {
+        fun serialize(event: Event): List<String> {
             val data = event.getAttributeData()
             val attributeData = Json.encodeToString(AttributeData.serializer(), data)
 
             return listOf(
                 event.type,
-                event.getName(),
-                if (event.startTimeNs != null) event.startTimeNs.toString() else Long.MAX_VALUE.toString(),
-                if (event.endTimeNs != null) event.endTimeNs.toString() else Long.MIN_VALUE.toString(),
-                attributeData
-            )
-        }
-
-        fun serialize(event: InstantEvent): List<String> {
-            val data = event.getAttributeData()
-            val attributeData = Json.encodeToString(AttributeData.serializer(), data)
-
-            return listOf(
-                event.type,
-                event.getName(),
+                event.name,
+                event.correlationId?.toString() ?: "",
                 event.timeNs.toString(),
-                "",
                 attributeData
             )
         }
 
         fun deserialize(csvRow: CsvRow): Event? {
-            val eventType = csvRow.getField(0)
-            val name = csvRow.getField(1)
-            val startTimeRaw = csvRow.getField(2)
-            val endTimeRaw = csvRow.getField(3)
-            val attributeDataRaw = csvRow.getField(4)
+            var index = 0
+
+            val eventType = csvRow.getField(index++)
+            val name = csvRow.getField(index++)
+            val correlationIdString = csvRow.getField(index++)
+            val timeNs = csvRow.getField(index++).toLong()
+            val attributeDataRaw = csvRow.getField(index)
+
+            val correlationId: UUID? = if (correlationIdString.isBlank()) null else UUID.fromString(correlationIdString)
 
             val event: Event
 
-            if (TimedEvent.TYPE.equals(eventType)) {
-                val timedEvent = TimedEvent(name, startTimeRaw.toLongOrNull())
-                timedEvent.endTimeNs = endTimeRaw.toLongOrNull()
-
-                event = timedEvent
-            } else if (InstantEvent.TYPE.equals(eventType)) {
-                event = InstantEvent(name, startTimeRaw.toLong())
+            if (IntervalStartEvent.TYPE == eventType) {
+                event = IntervalStartEvent(name, timeNs)
+            } else if (IntervalEndEvent.TYPE == eventType) {
+                event = IntervalEndEvent(name, timeNs, correlationId!!)
+            } else if (InstantEvent.TYPE == eventType) {
+                event = InstantEvent(name, timeNs)
             } else {
                 return null
             }
 
             val attributeData = Json.decodeFromString<AttributeData>(attributeDataRaw)
-
-            for (entry in attributeData.map.entries) {
-                event.putAttribute(entry.key, entry.value)
-            }
+            event.loadAttributeData(attributeData, includeSpecialAttributes = true)
 
             return event
         }

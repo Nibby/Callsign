@@ -16,7 +16,7 @@ public final class RawTraceFile {
     private static final List<String> SUPPORTED_FILE_EXTENSIONS;
 
     static {
-        FILE_EXTENSION_READERS.put(CsvFormat.Companion.getExtension(), RawTraceFileCsvReader.class);
+        FILE_EXTENSION_READERS.put(CsvFormat.EXTENSION, RawTraceFileCsvReader.class);
 
         SUPPORTED_FILE_EXTENSIONS = new ArrayList<>(FILE_EXTENSION_READERS.keySet());
     }

@@ -1,7 +1,6 @@
 package codes.nibby.callsign.api.sinks
 
 import codes.nibby.callsign.api.InstantEvent
-import codes.nibby.callsign.api.TimedEvent
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -66,7 +65,7 @@ class CsvFileSinkTest {
     @Test
     fun testConstructor_outputFileExists_preservesExistingContent() {
         val sink = CsvFileSink(testDataFolder, "testFile")
-        sink.writeEvent(InstantEvent("Test"))
+        sink.publishEvent(InstantEvent("Test"))
 
         val fileLengthInFirstSession = sink.outputFile.toFile().length()
 
@@ -78,29 +77,11 @@ class CsvFileSinkTest {
     }
 
     @Test
-    fun testWriteEvent_appendsDataToFileEveryTime() {
+    fun testPublishEvent_appendsDataToFileEveryTime() {
         val sink = CsvFileSink(testDataFolder, "testFile")
 
         testWritesDataEveryCall(sink) {
-            sink.writeEvent(InstantEvent("Test"))
-        }
-    }
-
-    @Test
-    fun testWriteEventStart_appendsDataToFileEveryTime() {
-        val sink = CsvFileSink(testDataFolder, "testFile")
-
-        testWritesDataEveryCall(sink) {
-            sink.writeEventStart(TimedEvent("myEvent", 1))
-        }
-    }
-
-    @Test
-    fun testWriteEventEnd_appendsDataToFileEveryTime() {
-        val sink = CsvFileSink(testDataFolder, "testFile")
-
-        testWritesDataEveryCall(sink) {
-            sink.writeEventEnd(TimedEvent("myEvent", 1))
+            sink.publishEvent(InstantEvent("Test"))
         }
     }
 

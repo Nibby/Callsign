@@ -12,7 +12,7 @@ public abstract class TraceEvent {
 
     public TraceEvent(Map<String, String> attributes) {
         this.attributes = attributes;
-        this.name = attributes.get(Event.RESERVED_NAME_ATTRIBUTE);
+        this.name = attributes.get(Event.SPECIAL_NAME_ATTRIBUTE);
     }
 
     public String getName() {

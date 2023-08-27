@@ -1,7 +1,9 @@
 package codes.nibby.callsign.viewer.models;
 
+import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.api.InstantEvent;
-import codes.nibby.callsign.api.TimedEvent;
+import codes.nibby.callsign.api.IntervalEndEvent;
+import codes.nibby.callsign.api.IntervalStartEvent;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
@@ -23,8 +25,8 @@ public class SQLiteTraceDocument implements TraceDocument {
     protected final Path path;
     protected Connection connection;
 
-    protected long earliestEventStartTimeNs = UNDEFINED_EARLIEST_EVENT_START_TIME_NS;
-    protected long latestEventEndTimeNs = UNDEFINED_LATEST_EVENT_END_TIME_NS;
+    protected Long earliestEventStartTimeNs = UNDEFINED_EARLIEST_EVENT_START_TIME_NS;
+    protected Long latestEventEndTimeNs = UNDEFINED_LATEST_EVENT_END_TIME_NS;
     protected boolean hasMetadataRow = false;
 
     protected final Object stateLock = new Object();
@@ -88,14 +90,39 @@ public class SQLiteTraceDocument implements TraceDocument {
             AttributeHeaderData headerData = loadAttributeHeaderData(statement);
 
             // 2. Stream results
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM " + EventsTable.TABLE_NAME);
+            // Interval events are retrieved differently because of their complementary nature,
+            // so do the instant events first because they are the simplest.
+            ResultSet resultSet = statement.executeQuery(
+                "SELECT * FROM " + EventsTable.TABLE_NAME + " WHERE " + EventsTable.COLUMN_EVENT_TYPE + " = " + InstantEvent.TYPE
+            );
 
             while (resultSet.next()) {
-                processTraceEntry(resultSet, headerData, consumer);
+                processInstantEventEntry(resultSet, headerData, consumer);
             }
+
+            // 2 (cont.) Now stream interval events
+            String eventIdColumnName = headerData.getColumnName(Event.SPECIAL_ID_ATTRIBUTE).orElseThrow();
+
+            resultSet = statement.executeQuery(
+                "SELECT " +
+                    " start." + EventsTable.COLUMN_TIME_NS + ", " +
+                    " finish.* " +
+                "FROM " + EventsTable.TABLE_NAME + " start " +
+                    "JOIN " + EventsTable.TABLE_NAME + " finish " +
+                        "ON start." + eventIdColumnName + " = finish." + EventsTable.COLUMN_CORRELATION_ID
+            );
+
+            while (resultSet.next()) {
+                processIntervalEventEntry(resultSet, headerData, consumer);
+            }
+
         } catch (SQLException e) {
             throw new TraceDocumentAccessException(e);
         }
+    }
+
+    private void processIntervalEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) {
+
     }
 
     @Override
@@ -125,43 +152,21 @@ public class SQLiteTraceDocument implements TraceDocument {
         return headerData;
     }
 
-    private void processTraceEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
+    private void processInstantEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
         String type = resultSet.getString(EventsTable.COLUMN_EVENT_TYPE);
+        long timeNs = resultSet.getLong(EventsTable.COLUMN_TIME_NS);
 
-        long startTimeNs = resultSet.getLong(EventsTable.COLUMN_START_TIME_NS);
-        long endTimeNs = resultSet.getLong(EventsTable.COLUMN_END_TIME_NS);
-
-        boolean validEntry;
-
-        if (InstantEvent.TYPE.equals(type) || TimedEvent.TYPE.equals(type)) {
-            validEntry = true;
-        } else if (type != null) {
-            throw new IllegalStateException("Unsupported event type: " + type);
-        } else {
-            // TODO: Handle this better
-            System.err.println("Ignored an event with NULL type");
-            validEntry = false;
-        }
-
-        if (!validEntry) {
+        if (!InstantEvent.TYPE.equals(type)) {
             return;
         }
 
-        Map<String, String> attributes = loadTraceEntryAttributes(resultSet, headerData);
-        TraceEvent entry;
-
-        if (InstantEvent.TYPE.equals(type)) {
-            entry = new InstantTraceEvent(attributes, startTimeNs);
-        } else if (TimedEvent.TYPE.equals(type)) {
-            entry = new TimedTraceEvent(attributes,  startTimeNs, endTimeNs);
-        } else {
-            throw new IllegalStateException();
-        }
+        Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
+        TraceEvent entry = new InstantTraceEvent(attributes, timeNs);
 
         consumer.accept(entry);
     }
 
-    private Map<String, String> loadTraceEntryAttributes(ResultSet resultSet, AttributeHeaderData headerData) throws SQLException {
+    private Map<String, String> loadEntryAttributes(ResultSet resultSet, AttributeHeaderData headerData) throws SQLException {
         Map<String, String> attributes = new HashMap<>();
 
         for (String columnName : headerData.getAllColumnNames()) {
@@ -212,8 +217,8 @@ public class SQLiteTraceDocument implements TraceDocument {
 
             static final String COLUMN_ID = "id";
             static final String COLUMN_EVENT_TYPE = "event_type";
-            static final String COLUMN_START_TIME_NS = "start_time_ns";
-            static final String COLUMN_END_TIME_NS = "end_time_ns";
+            static final String COLUMN_CORRELATION_ID = "correlation_id";
+            static final String COLUMN_TIME_NS = "time_ns";
         }
 
         static final class AttributeHeaderTable {

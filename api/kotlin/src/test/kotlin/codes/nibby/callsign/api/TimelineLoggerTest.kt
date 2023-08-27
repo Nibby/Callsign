@@ -12,7 +12,7 @@ class TimelineLoggerTest {
 
         val timedEvent = timeline.recordEventStart("timed event 1")
 
-        Assertions.assertNotNull(timedEvent.startTimeNs)
+        Assertions.assertNotNull(timedEvent.timeNs)
     }
 
     // Not intended to test for time resolution, just checking the recorded time is
@@ -24,7 +24,7 @@ class TimelineLoggerTest {
         val timedEvent = timeline.recordEventStart("timed event 1")
         val timeNow = System.nanoTime()
 
-        val nsDifference = timeNow - timedEvent.startTimeNs!!
+        val nsDifference = timeNow - timedEvent.timeNs
         val nsTolerance = TimeUnit.MILLISECONDS.toNanos(100)
 
         Assertions.assertTrue(
@@ -34,22 +34,13 @@ class TimelineLoggerTest {
     }
 
     @Test
-    fun testRecordEventStart_endTimeNsNull() {
-        val timeline = TimelineLogger(TestSink())
-
-        val timedEvent = timeline.recordEventStart("timed event 1")
-
-        Assertions.assertNull(timedEvent.endTimeNs)
-    }
-
-    @Test
     fun testRecordEventStart_nameSet() {
         val timeline = TimelineLogger(TestSink())
         val name = "timed event 1"
 
         val timedEvent = timeline.recordEventStart(name)
 
-        Assertions.assertEquals(name, timedEvent.getName())
+        Assertions.assertEquals(name, timedEvent.name)
     }
 
     @Test
@@ -82,7 +73,7 @@ class TimelineLoggerTest {
         timeline.recordEventEnd(timedEvent)
 
         val timeNow = System.nanoTime()
-        val nsDifference = timeNow - timedEvent.endTimeNs!!
+        val nsDifference = timeNow - timedEvent.timeNs
         val nsTolerance = TimeUnit.MILLISECONDS.toNanos(100)
 
         Assertions.assertTrue(
@@ -103,18 +94,6 @@ class TimelineLoggerTest {
         Assertions.assertThrows(IllegalStateException::class.java) {
             timeline.recordEventEnd(timedEvent)
         }
-    }
-
-    @Test
-    fun testRecordEventEnd_invokesSinkWriterMethod() {
-        val sink = TestSink()
-        val timeline = TimelineLogger(sink)
-
-        val timedEvent = timeline.recordEventStart("timed event 1")
-
-        timeline.recordEventEnd(timedEvent)
-
-        Assertions.assertTrue(sink.writeEventEndCalled.contains(timedEvent))
     }
 
     @Test
@@ -163,20 +142,24 @@ class TimelineLoggerTest {
 
     private class TestSink : TimelineLogSink {
 
-        val writeEventStartCalled: MutableList<TimedEvent> = ArrayList()
-        val writeEventEndCalled: MutableList<TimedEvent> = ArrayList()
+        val writeEventStartCalled: MutableList<IntervalStartEvent> = ArrayList()
+        val writeEventEndCalled: MutableList<IntervalEndEvent> = ArrayList()
         val writeEventCalled: MutableList<InstantEvent> = ArrayList()
 
-        override fun writeEventStart(event: TimedEvent) {
-            writeEventStartCalled.add(event)
-        }
+        override fun publishEvent(event: Event) {
+            when (event) {
+                is InstantEvent -> {
+                    writeEventCalled.add(event)
+                }
 
-        override fun writeEventEnd(event: TimedEvent) {
-            writeEventEndCalled.add(event)
-        }
+                is IntervalStartEvent -> {
+                    writeEventStartCalled.add(event)
+                }
 
-        override fun writeEvent(event: InstantEvent) {
-            writeEventCalled.add(event)
+                is IntervalEndEvent -> {
+                    writeEventEndCalled.add(event)
+                }
+            }
         }
     }
 }

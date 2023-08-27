@@ -1,7 +1,7 @@
 package codes.nibby.callsign.viewer;
 
 import codes.nibby.callsign.api.InstantEvent;
-import codes.nibby.callsign.api.TimedEvent;
+import codes.nibby.callsign.api.IntervalStartEvent;
 import codes.nibby.callsign.api.TimelineLogger;
 import codes.nibby.callsign.api.sinks.CsvFileSink;
 
@@ -17,7 +17,7 @@ public class TestDataGenerator {
 //        instantEvent.putAttribute("threadId", "0");
 //        logger.recordEvent(instantEvent);
 
-        TimedEvent timeEvent = logger.recordEventStart("MyTestEvent");
+        IntervalStartEvent timeEvent = logger.recordEventStart("MyTestEvent");
         timeEvent.putAttribute("threadId", "0");
         timeEvent.putAttribute("TimedAttribute", "def");
         timeEvent.putAttribute("TimedAttribute2", "Abc");
@@ -27,7 +27,7 @@ public class TestDataGenerator {
         logger.recordEvent(new InstantEvent("TestInstantEvent2 - After Sleep"));
         logger.recordEventEnd(timeEvent);
 
-        TimedEvent timeEvent2 = logger.recordEventStart("MyTestEvent2");
+        IntervalStartEvent timeEvent2 = logger.recordEventStart("MyTestEvent2");
         timeEvent2.putAttribute("threadId", "1");
         Thread.sleep(2000);
         logger.recordEventEnd(timeEvent2);

@@ -27,21 +27,8 @@ class EventTest {
     }
 
     @Test
-    fun testConstructor_nameOver1024Characters_fails() {
-        val longName = StringBuilder()
-
-        for (i in 1..1025) {
-            longName.append("a")
-        }
-
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            TestEvent(longName.toString())
-        }
-    }
-
-    @Test
     fun testConstructor_nameContainsNoLeadingOrTrailingWhitespace_succeeds() {
-        val name = "normal name";
+        val name = "normal name"
 
         Assertions.assertDoesNotThrow {
             TestEvent(name)
@@ -49,7 +36,7 @@ class EventTest {
 
         val event = TestEvent("normal name")
 
-        Assertions.assertEquals(name, event.getName())
+        Assertions.assertEquals(name, event.name)
     }
 
     @Test
@@ -177,7 +164,6 @@ class EventTest {
         Assertions.assertEquals(value, retrievedValue)
     }
 
-    private class TestEvent(name: String) : Event("test", name) {
-
-    }
+    private class TestEvent(name: String, timeNs: Long? = null)
+        : Event("test", name, timeNs ?: System.nanoTime(), null)
 }

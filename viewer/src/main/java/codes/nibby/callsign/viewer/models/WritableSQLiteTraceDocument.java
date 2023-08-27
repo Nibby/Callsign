@@ -2,7 +2,8 @@ package codes.nibby.callsign.viewer.models;
 
 import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.api.InstantEvent;
-import codes.nibby.callsign.api.TimedEvent;
+import codes.nibby.callsign.api.IntervalEndEvent;
+import codes.nibby.callsign.api.IntervalStartEvent;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,40 +64,40 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
     private void createAttributeHeaderTable(Statement statement) throws SQLException {
         statement.execute(
             "CREATE TABLE " + AttributeHeaderTable.TABLE_NAME +
-                "(" +
+            "(" +
                 AttributeHeaderTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 AttributeHeaderTable.COLUMN_COLUMN_NAME + " TEXT NOT NULL," +
                 AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME + " TEXT NOT NULL" +
-                ")"
+            ")"
         );
 
-        statement.execute("CREATE INDEX index_column_name ON attribute_name_lookup (column_name)");
-        statement.execute("CREATE INDEX index_attribute_name ON attribute_name_lookup (attribute_name)");
+        statement.execute("CREATE INDEX index_column_name ON " + AttributeHeaderTable.TABLE_NAME + " (" + AttributeHeaderTable.COLUMN_COLUMN_NAME + ")");
+        statement.execute("CREATE INDEX index_attribute_name ON " + AttributeHeaderTable.TABLE_NAME + " (" + AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME + ")");
     }
 
     private void createEventsTable(Statement statement) throws SQLException {
         statement.execute(
             "CREATE TABLE " + EventsTable.TABLE_NAME +
-                "(" +
+            "(" +
                 EventsTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 EventsTable.COLUMN_EVENT_TYPE + " TEXT NOT NULL," +
-                EventsTable.COLUMN_START_TIME_NS + " INTEGER NULL," +
-                EventsTable.COLUMN_END_TIME_NS + " INTEGER NULL" +
-                ")"
+                EventsTable.COLUMN_CORRELATION_ID + " TEXT NOT NULL," +
+                EventsTable.COLUMN_TIME_NS + " INTEGER NULL" +
+            ")"
         );
 
-        statement.execute("CREATE INDEX index_start_time_ns ON event_data (start_time_ns)");
-        statement.execute("CREATE INDEX index_end_time_ns ON event_data (end_time_ns)");
+        statement.execute("CREATE INDEX index_time_ns ON event_data (" + EventsTable.COLUMN_TIME_NS + ")");
+        statement.execute("CREATE INDEX correlation_id ON event_data (" + EventsTable.COLUMN_CORRELATION_ID + ")");
     }
 
     private void createMetadataTable(Statement statement) throws SQLException {
         statement.execute(
             "CREATE TABLE " + MetadataTable.TABLE_NAME +
-                "(" +
+            "(" +
                 MetadataTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS + " INTEGER NOT NULL," +
                 MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS + " INTEGER NOT NULL" +
-                ")"
+            ")"
         );
     }
 
@@ -207,28 +208,23 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO " + EventsTable.TABLE_NAME + "(" +
                     EventsTable.COLUMN_EVENT_TYPE + ", " +
-                    EventsTable.COLUMN_START_TIME_NS + ", " +
-                    EventsTable.COLUMN_END_TIME_NS +
+                    EventsTable.COLUMN_TIME_NS + ", " +
                     additionalAttributeColumns + ") " +
-                    "VALUES (?, ?, ?" + additionalAttributeValues + ")"
+                    "VALUES (?, ?" + additionalAttributeValues + ")"
             )
         ) {
             int index = 1;
+
             statement.setString(index++, event.getType());
 
-            if (event instanceof TimedEvent timedEvent) {
-                long startTimeNs = timedEvent.getStartTimeNs() == null ? Long.MIN_VALUE : timedEvent.getStartTimeNs();
-                statement.setLong(index++, startTimeNs);
+            long timeNs = event.getTimeNs();
+            statement.setLong(index++, timeNs);
 
-                long endTimeNs = timedEvent.getEndTimeNs() == null ? Long.MAX_VALUE : timedEvent.getEndTimeNs();
-                statement.setLong(index++, endTimeNs);
-
-                updateMetadataIfApplicable(timedEvent.getStartTimeNs(), timedEvent.getEndTimeNs());
-
+            if (event instanceof IntervalStartEvent) {
+                updateMetadataIfApplicable(timeNs, null);
+            } else if (event instanceof IntervalEndEvent) {
+                updateMetadataIfApplicable(null, timeNs);
             } else if (event instanceof InstantEvent instantEvent) {
-                statement.setLong(index++, instantEvent.getTimeNs());
-                statement.setObject(index++, null);
-
                 updateMetadataIfApplicable(instantEvent.getTimeNs(), instantEvent.getTimeNs());
             } else {
                 throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
@@ -245,15 +241,15 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         }
     }
 
-    private void updateMetadataIfApplicable(long startTimeNs, long endTimeNs) throws SQLException {
+    private void updateMetadataIfApplicable(Long startTimeNs, Long endTimeNs) throws SQLException {
         boolean metadataChanged = false;
 
-        if (earliestEventStartTimeNs != startTimeNs) {
+        if (startTimeNs != null && earliestEventStartTimeNs != startTimeNs) {
             earliestEventStartTimeNs = Math.min(earliestEventStartTimeNs, startTimeNs);
             metadataChanged = true;
         }
 
-        if (latestEventEndTimeNs != endTimeNs) {
+        if (endTimeNs != null && latestEventEndTimeNs != endTimeNs) {
             latestEventEndTimeNs = Math.max(latestEventEndTimeNs, endTimeNs);
             metadataChanged = true;
         }

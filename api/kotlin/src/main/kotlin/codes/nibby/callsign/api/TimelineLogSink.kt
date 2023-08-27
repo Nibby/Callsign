@@ -1,11 +1,15 @@
 package codes.nibby.callsign.api
 
+/**
+ * Publishes recorded event data from a [TimelineLogger] to some destination.
+ */
 interface TimelineLogSink {
 
-    fun writeEventStart(event: TimedEvent)
-
-    fun writeEventEnd(event: TimedEvent)
-
-    fun writeEvent(event: InstantEvent)
+    /**
+     * Publishes a recorded event to the destination.
+     *
+     * @param event Event to publish
+     */
+    fun publishEvent(event: Event)
 
 }

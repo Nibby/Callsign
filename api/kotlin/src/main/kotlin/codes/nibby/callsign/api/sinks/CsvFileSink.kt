@@ -1,8 +1,6 @@
 package codes.nibby.callsign.api.sinks
 
-import codes.nibby.callsign.api.InstantEvent
-import codes.nibby.callsign.api.TimedEvent
-import codes.nibby.callsign.api.TimelineLogSink
+import codes.nibby.callsign.api.*
 import codes.nibby.callsign.api.formats.CsvFormat
 import de.siegmar.fastcsv.writer.CsvWriter
 import java.io.BufferedWriter
@@ -10,7 +8,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-class CsvFileSink(outputFolder: Path, val nameWithoutExtension: String) : TimelineLogSink {
+/**
+ * A [TimelineLogger] sink that persists events to a CSV format file on disk.
+ */
+class CsvFileSink(outputFolder: Path, nameWithoutExtension: String) : TimelineLogSink {
 
     internal val outputFile: Path
 
@@ -22,29 +23,17 @@ class CsvFileSink(outputFolder: Path, val nameWithoutExtension: String) : Timeli
             Files.createDirectories(outputFolder)
         }
 
-        outputFile = outputFolder.resolve("$nameWithoutExtension.${CsvFormat.Extension}")
+        outputFile = outputFolder.resolve("$nameWithoutExtension.${CsvFormat.EXTENSION}")
 
         if (!Files.exists(outputFile)) {
             Files.createFile(outputFile)
         }
 
-        bufferedWriter = Files.newBufferedWriter(outputFile, CsvFormat.Charset, StandardOpenOption.APPEND)
+        bufferedWriter = Files.newBufferedWriter(outputFile, CsvFormat.CHARSET, StandardOpenOption.APPEND)
         csvWriter = CsvFormat.createWriter(bufferedWriter)
     }
 
-    override fun writeEventStart(event: TimedEvent) {
-        val data = CsvFormat.serialize(event)
-        csvWriter.writeRow(data)
-        bufferedWriter.flush()
-    }
-
-    override fun writeEventEnd(event: TimedEvent) {
-        val data = CsvFormat.serialize(event)
-        csvWriter.writeRow(data)
-        bufferedWriter.flush()
-    }
-
-    override fun writeEvent(event: InstantEvent) {
+    override fun publishEvent(event: Event) {
         val data = CsvFormat.serialize(event)
         csvWriter.writeRow(data)
         bufferedWriter.flush()
