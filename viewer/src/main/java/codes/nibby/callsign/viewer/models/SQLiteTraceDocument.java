@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.AttributeHeaderTable;
@@ -75,15 +76,15 @@ public class SQLiteTraceDocument implements TraceDocument {
     }
 
     @Override
-    public void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEvent> consumer) throws TraceDocumentAccessException {
+    public void streamTraces(List<TraceEntryFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
         assertLoaded();
 
         try (Statement statement = connection.createStatement()) {
             // TODO: Don't need to do this every time if document hasn't changed since it was loaded
             AttributeHeaderData headerData = loadAttributeHeaderData(statement);
 
-            streamInstantEvents(statement, headerData, filters, consumer);
-            streamTimedEvents(statement, headerData, filters, consumer);
+            streamInstantTraces(statement, headerData, filters, consumer);
+            streamIntervalTraces(statement, headerData, filters, consumer);
         } catch (SQLException e) {
             throw new TraceDocumentAccessException(e);
         }
@@ -104,11 +105,11 @@ public class SQLiteTraceDocument implements TraceDocument {
         return headerData;
     }
 
-    private void streamInstantEvents(
+    private void streamInstantTraces(
         Statement statement,
         AttributeHeaderData headerData,
         List<TraceEntryFilter> filters,
-        Consumer<TraceEvent> consumer
+        Consumer<Trace> consumer
     ) throws SQLException {
 
         // TODO: Convert filter settings into SQL condition
@@ -124,11 +125,15 @@ public class SQLiteTraceDocument implements TraceDocument {
         }
     }
 
-    private void processInstantEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
+    private void processInstantEventEntry(
+        ResultSet resultSet,
+        AttributeHeaderData headerData,
+        Consumer<Trace> consumer
+    ) throws SQLException {
         long timeNs = resultSet.getLong(EventsTable.COLUMN_TIME_NS);
 
         Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
-        TraceEvent entry = new InstantTrace(attributes, timeNs);
+        Trace entry = new InstantTrace(attributes, timeNs);
 
         consumer.accept(entry);
     }
@@ -156,11 +161,41 @@ public class SQLiteTraceDocument implements TraceDocument {
         return attributes;
     }
 
-    private void streamTimedEvents(
+    /*
+        Continuously reading (and incrementing) nextIndex until all columns from headerData have been read.
+
+        Has side effect of incrementing nextIndex to the next unread value once this method completes.
+     */
+    private Map<String, String> loadEntryAttributesByColumnIndexScan(
+        AtomicInteger nextIndex,
+        ResultSet resultSet,
+        AttributeHeaderData headerData
+    ) throws SQLException {
+        ResultSetMetaData metadata = resultSet.getMetaData();
+
+        Map<String, String> results = new HashMap<>();
+
+        for (int count = 0; count < headerData.columnNameToAttributeName.size(); count++) {
+            int readIndex = nextIndex.getAndIncrement();
+            String columnName = metadata.getColumnName(readIndex);
+            Optional<String> attributeName = headerData.getAttributeName(columnName);
+
+            if (attributeName.isEmpty()) {
+                throw new IllegalStateException("Column (index=" + readIndex + ") is not valid attribute data");
+            }
+
+            String attributeValue = resultSet.getString(readIndex);
+            results.put(attributeName.get(), attributeValue);
+        }
+
+        return results;
+    }
+
+    private void streamIntervalTraces(
         Statement statement,
         AttributeHeaderData headerData,
         List<TraceEntryFilter> filters,
-        Consumer<TraceEvent> consumer
+        Consumer<Trace> consumer
     ) throws SQLException {
 
         // TODO: Convert filter settings into SQL condition
@@ -173,25 +208,26 @@ public class SQLiteTraceDocument implements TraceDocument {
         // - Has start but no end
         // - Has start and has an end
         // - No start but has an end
+
         ResultSet resultSet = statement.executeQuery(
             "SELECT " +
-                " " + startEventPrefix + "." + EventsTable.COLUMN_TIME_NS + ", " +
+                " " + startEventPrefix + ".*, " +
                 " " + endEventPrefix + ".* " +
-            "FROM " + EventsTable.TABLE_NAME + " " + startEventPrefix + " " +
-                "LEFT OUTER JOIN " + EventsTable.TABLE_NAME + " " + endEventPrefix + " " +
+            "FROM " + EventsTable.TABLE_NAME + " AS " + startEventPrefix + " " +
+                "LEFT OUTER JOIN " + EventsTable.TABLE_NAME + " AS " + endEventPrefix + " " +
                     "ON " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_ID + " = " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " " +
             "WHERE " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_TYPE + " = '" + IntervalStartEvent.TYPE + "' " +
 
             "UNION ALL " +
 
             "SELECT " +
-            " " + startEventPrefix + "." + EventsTable.COLUMN_TIME_NS + ", " +
+            " " + startEventPrefix + ".*, " +
             " " + endEventPrefix + ".* " +
-            "FROM " + EventsTable.TABLE_NAME + " " + endEventPrefix + " " +
-                "LEFT OUTER JOIN " + EventsTable.TABLE_NAME + " " + startEventPrefix + " " +
+            "FROM " + EventsTable.TABLE_NAME + " AS  " + endEventPrefix + " " +
+                "LEFT OUTER JOIN " + EventsTable.TABLE_NAME + " AS " + startEventPrefix + " " +
                     "ON " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_ID + " = " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " " +
             "WHERE " + endEventPrefix + "." + EventsTable.COLUMN_EVENT_TYPE + " = '" + IntervalEndEvent.TYPE + "' " +
-                "AND " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " IS NULL"
+                "AND " + startEventPrefix + "." + EventsTable.COLUMN_ID + " IS NULL"
         );
 
         while (resultSet.next()) {
@@ -199,8 +235,31 @@ public class SQLiteTraceDocument implements TraceDocument {
         }
     }
 
-    private void processIntervalEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<TraceEvent> consumer) throws SQLException {
+    private void processIntervalEventEntry(ResultSet resultSet, AttributeHeaderData headerData, Consumer<Trace> consumer) throws SQLException {
+        // TODO: Can make life so much easier by defining a custom view that excludes columns we don't care about;
+        /*
+               1: start.id
+               2: start.event_id
+               3: start.correlation_id
+               4: start.event_type
+               5: start.time_ns
+             5+n: start.[custom_attributes]   (0 <= x <= n)
+           5+n+1: end.id
+           5+n+2: end.event_id
+           5+n+3: end.correlation_id
+           5+n+4: end.event_type
+           5+n+5: end.time_ns
+           5+n+m: end.[custom_attributes]     (0 <= x <= m)
+         */
+
         int index = 1;
+
+        @Nullable String startEventId = resultSet.getString(index++); // start.id
+        index++; // skip start.event_id
+        index++; // skip start.correlation_id
+        index++; // skip start.event_type
+
+        // Read start.time_ns
         long startTimeNs = resultSet.getLong(index++);
 
         if (startTimeNs == 0) {
@@ -209,10 +268,24 @@ public class SQLiteTraceDocument implements TraceDocument {
             startTimeNs = UNDEFINED_START_TIME_NS;
         }
 
-        index++; // skip endEvent.id
-        index++; // skip endEvent.event_id
-        index++; // skip endEvent.correlation_id
+        // Read all attributes from start.*
+        var indexRef = new AtomicInteger(index);
+        @Nullable Map<String, String> startEventAttributes;
 
+        if (startEventId != null) {
+            startEventAttributes = loadEntryAttributesByColumnIndexScan(indexRef, resultSet, headerData);
+        } else {
+            indexRef.set(index + headerData.columnNameToAttributeName.size());
+            startEventAttributes = null;
+        }
+
+        index = indexRef.get(); // at end.id
+        @Nullable String endEventId = resultSet.getString(index++); // end.id
+        index++; // skip end.event_id
+        index++; // skip end.correlation_id
+        index++; // skip end.event_type
+
+        // Read end.time_ns
         long endTimeNs = resultSet.getLong(index++);
 
         if (endTimeNs == 0) {
@@ -221,9 +294,16 @@ public class SQLiteTraceDocument implements TraceDocument {
             endTimeNs = UNDEFINED_END_TIME_NS;
         }
 
-        Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
+        indexRef.set(index);
+        @Nullable Map<String, String> endEventAttributes;
+        if (endEventId != null) {
+            endEventAttributes = loadEntryAttributesByColumnIndexScan(indexRef, resultSet, headerData);
+        } else {
+            indexRef.set(index + headerData.columnNameToAttributeName.size());
+            endEventAttributes = null;
+        }
 
-        TraceEvent entry = new IntervalTrace(attributes, startTimeNs, endTimeNs);
+        Trace entry = new IntervalTrace(startEventAttributes, endEventAttributes, startTimeNs, endTimeNs);
 
         consumer.accept(entry);
     }

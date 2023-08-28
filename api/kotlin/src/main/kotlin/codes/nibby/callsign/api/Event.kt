@@ -57,6 +57,10 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
     private val attributeData = AttributeData(HashMap())
 
     init {
+        if (name.isBlank() || name.startsWith(" ") || name.endsWith(" ")) {
+            throw IllegalArgumentException("Name must not contain leading or trailing whitespace, or be blank")
+        }
+
         putSpecialAttribute(SPECIAL_NAME_ATTRIBUTE, name)
 
         id = existingId ?: UUID.randomUUID()

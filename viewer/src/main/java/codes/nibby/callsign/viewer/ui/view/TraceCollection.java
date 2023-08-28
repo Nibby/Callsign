@@ -18,7 +18,7 @@ final class TraceCollection {
         tracks.clear();
 
         try {
-            document.streamEntries(List.of(), event -> {
+            document.streamTraces(List.of(), event -> {
                 Map<String, String> attributes = event.getAttributes();
                 String trackAttributeValue = attributes.get(trackAttributeName);
 

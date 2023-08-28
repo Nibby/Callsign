@@ -2,7 +2,7 @@ package codes.nibby.callsign.viewer.ui.view;
 
 import codes.nibby.callsign.viewer.models.InstantTrace;
 import codes.nibby.callsign.viewer.models.IntervalTrace;
-import codes.nibby.callsign.viewer.models.TraceEvent;
+import codes.nibby.callsign.viewer.models.Trace;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -22,7 +22,7 @@ final class Track implements Comparable<Track> {
         return name;
     }
 
-    public void notifyTraceAdded(TraceEvent event) {
+    public void notifyTraceAdded(Trace event) {
         if (event instanceof InstantTrace instantEvent) {
             earliestEntryTimeNs = (earliestEntryTimeNs == null)
                 ? instantEvent.getTimeNs()

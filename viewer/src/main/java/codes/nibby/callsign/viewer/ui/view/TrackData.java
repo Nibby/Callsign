@@ -1,6 +1,6 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-import codes.nibby.callsign.viewer.models.TraceEvent;
+import codes.nibby.callsign.viewer.models.Trace;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,11 +8,11 @@ import java.util.List;
 
 final class TrackData {
 
-    private final List<TraceEvent> traces = new ArrayList<>();
+    private final List<Trace> traces = new ArrayList<>();
 
     private long earliestEntryTimeNs = Long.MAX_VALUE;
 
-    public void addTrace(TraceEvent entry) {
+    public void addTrace(Trace entry) {
         traces.add(entry);
     }
 
@@ -20,7 +20,7 @@ final class TrackData {
         return earliestEntryTimeNs;
     }
 
-    public List<TraceEvent> getTraces() {
+    public List<Trace> getTraces() {
         return Collections.unmodifiableList(traces);
     }
 }

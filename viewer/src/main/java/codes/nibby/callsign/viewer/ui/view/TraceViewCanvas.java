@@ -2,7 +2,7 @@ package codes.nibby.callsign.viewer.ui.view;
 
 import codes.nibby.callsign.viewer.models.InstantTrace;
 import codes.nibby.callsign.viewer.models.IntervalTrace;
-import codes.nibby.callsign.viewer.models.TraceEvent;
+import codes.nibby.callsign.viewer.models.Trace;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 
@@ -33,7 +33,7 @@ final class TraceViewCanvas extends Canvas {
         double trackHeight = viewport.getTrackHeight();
         double yStart = viewport.getTrackStartDisplayY(trackIndex);
 
-        for (TraceEvent trace : trackData.getTraces()) {
+        for (Trace trace : trackData.getTraces()) {
 
             if (trace instanceof IntervalTrace intervalTrace) {
 

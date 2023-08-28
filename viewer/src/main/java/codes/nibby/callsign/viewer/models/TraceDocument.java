@@ -12,7 +12,7 @@ public interface TraceDocument {
 
     void unload() throws TraceDocumentAccessException;
 
-    void streamEntries(List<TraceEntryFilter> filters, Consumer<TraceEvent> consumer) throws TraceDocumentAccessException;
+    void streamTraces(List<TraceEntryFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException;
 
     long getEarliestEventStartTimeNs();
 

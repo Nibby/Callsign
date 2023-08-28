@@ -2,7 +2,7 @@ package codes.nibby.callsign.viewer.models;
 
 import java.util.Map;
 
-public final class InstantTrace extends TraceEvent {
+public final class InstantTrace extends Trace {
 
     private final long timeNs;
 
