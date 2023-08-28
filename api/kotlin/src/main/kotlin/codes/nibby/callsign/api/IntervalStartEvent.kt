@@ -20,6 +20,8 @@ class IntervalStartEvent internal constructor(
     timeNs: Long
 ) : Event(existingId, null, TYPE, name, timeNs) {
 
+    internal var recorded: Boolean = false
+
     companion object {
         const val TYPE = "t-s"
     }

@@ -1,110 +1,110 @@
 package codes.nibby.callsign.api
 
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import java.util.concurrent.TimeUnit
-import kotlin.system.measureNanoTime
 
 class TimelineLoggerTest {
 
     @Test
-    fun testRecordEventStart_returnedEventStartTimeSet() {
+    fun testRecordEventStart_setsEventRecordedFlag() {
         val timeline = TimelineLogger(TestSink())
+        val event = IntervalStartEvent("timed event 1", System.nanoTime())
 
-        val timedEvent = timeline.recordEventStart("timed event 1")
+        timeline.recordEventStart(event)
 
-        Assertions.assertNotNull(timedEvent.timeNs)
-    }
-
-    // Not intended to test for time resolution, just checking the recorded time is
-    // not completely bogus.
-    @Test
-    fun testRecordEventStart_startTimeNsRoughlyCorrect() {
-        val timeline = TimelineLogger(TestSink())
-
-        val timedEvent = timeline.recordEventStart("timed event 1")
-        val timeNow = System.nanoTime()
-
-        val nsDifference = timeNow - timedEvent.timeNs
-        val nsTolerance = TimeUnit.MILLISECONDS.toNanos(100)
-
-        Assertions.assertTrue(
-            nsDifference <= nsTolerance,
-            "nsDifference too large! Got: $nsDifference (expected < $nsTolerance)"
-        )
+        assertTrue(event.recorded)
     }
 
     @Test
-    fun testRecordEventStart_nameSet() {
+    fun testRecordEventStart_invokeTwiceOnSameEvent_throwsIllegalStateException() {
         val timeline = TimelineLogger(TestSink())
-        val name = "timed event 1"
+        val event = IntervalStartEvent("timed event 1", System.nanoTime())
 
-        val timedEvent = timeline.recordEventStart(name)
+        timeline.recordEventStart(event)
 
-        Assertions.assertEquals(name, timedEvent.name)
+        org.junit.jupiter.api.assertThrows<IllegalStateException> {
+            timeline.recordEventStart(event)
+        }
     }
 
     @Test
     fun testRecordEventStart_invokesSinkWriterMethod() {
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
+        val event = IntervalStartEvent("timed event 1", System.nanoTime())
 
-        val timedEvent = timeline.recordEventStart("timed event 1")
+        timeline.recordEventStart(event)
 
-        Assertions.assertTrue(sink.writeEventStartCalled.contains(timedEvent))
+        assertTrue(sink.writeEventStartCalled.contains(event))
     }
 
     @Test
     fun testRecordEventEnd_endTimeSet() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = timeline.recordEventStart("timed event 1")
+        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        timeline.recordEventStart(timedEvent)
 
-        timeline.recordEventEnd(timedEvent)
+        timeline.recordEventEnd(timedEvent, System.nanoTime())
 
-        Assertions.assertNotNull(timedEvent)
-    }
-
-    // Not intended to test for time resolution, just checking the recorded time is
-    // not completely bogus.
-    @Test
-    fun testRecordEventEnd_endTimeRoughlyCorrect() {
-        val timeline = TimelineLogger(TestSink())
-        val timedEvent = timeline.recordEventStart("timed event 1")
-
-        timeline.recordEventEnd(timedEvent)
-
-        val timeNow = System.nanoTime()
-        val nsDifference = timeNow - timedEvent.timeNs
-        val nsTolerance = TimeUnit.MILLISECONDS.toNanos(100)
-
-        Assertions.assertTrue(
-            nsDifference <= nsTolerance,
-            "nsDifference too large! Got: $nsDifference (expected < $nsTolerance)"
-        )
+        assertNotNull(timedEvent)
     }
 
     @Test
-    fun testRecordEventEnd_methodCalledTwiceForSameEvent_fails() {
+    fun testRecordEventEnd_invokedTwiceOnSameEvent_failsWithIllegalStateException() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = timeline.recordEventStart("timed event 1")
+        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        timeline.recordEventStart(timedEvent)
 
-        Assertions.assertDoesNotThrow {
-            timeline.recordEventEnd(timedEvent)
+        assertDoesNotThrow {
+            timeline.recordEventEnd(timedEvent, System.nanoTime())
         }
 
-        Assertions.assertThrows(IllegalStateException::class.java) {
-            timeline.recordEventEnd(timedEvent)
+        assertThrows(IllegalStateException::class.java) {
+            timeline.recordEventEnd(timedEvent, System.nanoTime())
         }
     }
 
     @Test
     fun testRecordEventEnd_marksEventAsSaved() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = timeline.recordEventStart("timed event 1")
+        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        timeline.recordEventStart(timedEvent)
 
-        timeline.recordEventEnd(timedEvent)
+        timeline.recordEventEnd(timedEvent, System.nanoTime())
 
-        Assertions.assertTrue(timedEvent.saved)
+        assertTrue(timedEvent.published)
+    }
+
+    @Test
+    fun testRecordEventEnd_eventStartNotRecorded_failsWithIllegalStateException() {
+        val timeline = TimelineLogger(TestSink())
+        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+
+        org.junit.jupiter.api.assertThrows<IllegalStateException> {
+            timeline.recordEventEnd(timedEvent, System.nanoTime())
+        }
+    }
+
+    @Test
+    fun testRecordEventEnd_copiesAttributesFromIntervalStartEvent() {
+        val sink = TestSink()
+        val timeline = TimelineLogger(sink)
+        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        timedEvent.putAttribute("a1", "v1")
+        timedEvent.putAttribute("a2", "v2")
+
+        timeline.recordEventStart(timedEvent)
+
+        timedEvent.putAttribute("a3", "v3")
+        timedEvent.putAttribute("a1", "modified")
+
+        timeline.recordEventEnd(timedEvent, System.nanoTime())
+
+        assertEquals(1, sink.writeEventEndCalled.size)
+
+        val endEvent = sink.writeEventEndCalled[0]
+
+        assertEquals(timedEvent.getAttributeData(), endEvent.getAttributeData())
     }
 
     @Test
@@ -114,7 +114,7 @@ class TimelineLoggerTest {
 
         timeline.recordEvent(event)
 
-        Assertions.assertTrue(event.saved)
+        assertTrue(event.published)
     }
 
     @Test
@@ -125,7 +125,7 @@ class TimelineLoggerTest {
 
         timeline.recordEvent(event)
 
-        Assertions.assertTrue(sink.writeEventCalled.contains(event))
+        assertTrue(sink.writeEventCalled.contains(event))
     }
 
     @Test
@@ -136,7 +136,7 @@ class TimelineLoggerTest {
 
         timeline.recordEvent(event)
 
-        Assertions.assertThrows(IllegalStateException::class.java) {
+        assertThrows(IllegalStateException::class.java) {
             timeline.recordEvent(event)
         }
     }

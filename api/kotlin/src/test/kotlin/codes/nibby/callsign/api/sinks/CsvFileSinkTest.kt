@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.UUID
+import java.util.*
 
 class CsvFileSinkTest {
 
-    val testDataFolder = Paths.get(System.getProperty("user.dir")).resolve("test").resolve(generateRandomTestFolderName())
+    private val testDataFolder = Paths.get(System.getProperty("user.dir")).resolve("test").resolve(generateRandomTestFolderName())
 
     private fun generateRandomTestFolderName(): String {
         return this.javaClass.name + "-" + UUID.randomUUID().toString()
@@ -50,26 +50,26 @@ class CsvFileSinkTest {
     fun testConstructor_parentFoldersNotExist_createsThem() {
         val outputFolder = testDataFolder.resolve("notExistFolder").resolve("notExistFolder2")
 
-        CsvFileSink(outputFolder, "testFile")
+        CsvFileSink(outputFolder.resolve("testFile"))
 
         Assertions.assertTrue(Files.isDirectory(outputFolder))
     }
 
     @Test
     fun testConstructor_outputFileMissing_createsIt() {
-        val sink = CsvFileSink(testDataFolder, "testFile")
+        val sink = CsvFileSink(testDataFolder.resolve("testFile"))
 
         Assertions.assertTrue(Files.exists(sink.outputFile))
     }
 
     @Test
     fun testConstructor_outputFileExists_preservesExistingContent() {
-        val sink = CsvFileSink(testDataFolder, "testFile")
+        val sink = CsvFileSink(testDataFolder.resolve("testFile"))
         sink.publishEvent(InstantEvent("Test", System.nanoTime()))
 
         val fileLengthInFirstSession = sink.outputFile.toFile().length()
 
-        val sink2 = CsvFileSink(testDataFolder, "testFile")
+        val sink2 = CsvFileSink(testDataFolder.resolve("testFile"))
         val fileLengthInSecondSession = sink2.outputFile.toFile().length()
 
         Assertions.assertTrue(Files.isSameFile(sink.outputFile, sink2.outputFile))
@@ -78,7 +78,7 @@ class CsvFileSinkTest {
 
     @Test
     fun testPublishEvent_appendsDataToFileEveryTime() {
-        val sink = CsvFileSink(testDataFolder, "testFile")
+        val sink = CsvFileSink(testDataFolder.resolve("testFile"))
 
         testWritesDataEveryCall(sink) {
             sink.publishEvent(InstantEvent("Test", System.nanoTime()))

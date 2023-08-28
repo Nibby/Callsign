@@ -4,7 +4,6 @@ import codes.nibby.callsign.api.*;
 import codes.nibby.callsign.api.sinks.CsvFileSink;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +19,7 @@ public final class TestDataGenerator {
 
     public static void main(String[] args) throws InterruptedException {
 //        generateMixedEvents(Paths.get(System.getProperty("user.dir")), "mixedEvents");
+        generateIntervalEventPair().publishTo(new CsvFileSink(Paths.get(System.getProperty("user.home")).resolve("testDataFile")));
     }
 
     public static Result generateSingleInstantEvent() {
@@ -62,6 +62,7 @@ public final class TestDataGenerator {
         var startEvent = new IntervalStartEvent("TestIntervalEventPair", System.nanoTime() - realDuration);
         var endEvent = new IntervalEndEvent(startEvent.getId(), startEvent.getName(), System.nanoTime());
 
+        generateRandomAttributes(startEvent, 15);
         generateRandomAttributes(endEvent, 15);
 
         return new Result(startEvent, endEvent);
@@ -72,36 +73,6 @@ public final class TestDataGenerator {
         for (int i = 0; i < attributes; i++) {
             event.putAttribute("Attribute" + i, "AttributeValue" + i);
         }
-    }
-
-    public static void generateMixedEvents(Path outputFile) throws InterruptedException {
-        TimelineLogger logger = new TimelineLogger(new CsvFileSink(outputFile));
-
-        var instantEvent = new InstantEvent("TestInstantEvent1", System.nanoTime());
-        instantEvent.putAttribute("TestAttributeInstant", "abc");
-        instantEvent.putAttribute("threadId", "0");
-        logger.recordEvent(instantEvent);
-
-        IntervalStartEvent timeEvent = logger.recordEventStart("MyTestEvent");
-        timeEvent.putAttribute("threadId", "0");
-        timeEvent.putAttribute("TimedAttribute", "def");
-        timeEvent.putAttribute("TimedAttribute2", "Abc");
-
-        Thread.sleep(1000);
-
-        logger.recordEvent(new InstantEvent("TestInstantEvent2 - After Sleep", System.nanoTime()));
-        logger.recordEventEnd(timeEvent);
-
-        IntervalStartEvent timeEvent2 = logger.recordEventStart("MyTestEvent2");
-        timeEvent2.putAttribute("threadId", "1");
-        Thread.sleep(2000);
-        logger.recordEventEnd(timeEvent2);
-        Thread.sleep(2000);
-
-        var instantEvent2 = new InstantEvent("TestInstantEvent2", System.nanoTime());
-        instantEvent2.putAttribute("TestAttributeInstant", "def");
-        instantEvent2.putAttribute("threadId", "0");
-        logger.recordEvent(instantEvent2);
     }
 
     public static class Result {

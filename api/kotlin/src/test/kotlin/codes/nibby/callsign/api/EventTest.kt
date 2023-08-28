@@ -43,7 +43,7 @@ class EventTest {
     fun testConstructor_notSavedByDefault() {
         val event = TestEvent("test event")
 
-        Assertions.assertFalse(event.saved)
+        Assertions.assertFalse(event.published)
     }
 
     @Test
@@ -135,7 +135,7 @@ class EventTest {
 
     fun testPutAttribute_eventIsSaved_fails() {
         val event = TestEvent("event")
-        event.saved = true
+        event.published = true
 
         Assertions.assertThrows(IllegalStateException::class.java) {
             event.putAttribute("name", "")

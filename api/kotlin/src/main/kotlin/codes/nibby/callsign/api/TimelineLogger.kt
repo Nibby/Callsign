@@ -20,44 +20,59 @@ class TimelineLogger(private val sink: TimelineLogSink) {
      * returns an event reference. When the interval event completes some time later, call
      * [recordEventEnd] with the same reference to complete the event.
      *
-     * After [recordEventEnd] is called, the event reference should be discarded. Any attempt to
-     * modify it will fail.
+     * An [IntervalStartEvent] can only be recorded once. Calling this method on the same event
+     * twice will result in an [IllegalStateException].
      *
-     * @param name Name of the event
+     * The logger publishes the attributes set on the event at the time of method invocation. After
+     * the event start is recorded, the event attributes can still be modified until [recordEventEnd]
+     * is called. The latest set of attributes will be transferred to the [IntervalEndEvent] generated
+     * as part of that method call and published to the sink.
      *
-     * @return Reference of the new interval event
+     * @param startEvent Interval start event to log
+     *
+     * @see recordEventEnd
      */
-    fun recordEventStart(name: String): IntervalStartEvent {
-        val startTimeNs = System.nanoTime()
-        val event = IntervalStartEvent(null, name, startTimeNs);
+    fun recordEventStart(startEvent: IntervalStartEvent) {
+        synchronized(startEvent.lock) {
+            if (startEvent.recorded) {
+                throw IllegalStateException("$startEvent is already recorded")
+            }
 
-        sink.publishEvent(event)
+            startEvent.recorded = true
+        }
 
-        return event;
+        sink.publishEvent(startEvent)
     }
 
     /**
-     * Records the completion of a previously started interval-based event created from
-     * [recordEventStart].
+     * Records the completion of an interval event. [recordEventStart] must have been called on
+     * [startEvent] before calling this method. An [IntervalEndEvent] will be published to the
+     * sink, with attributes cloned from the start event.
      *
      * After this method, the event reference should be discarded. Any attempt to modify it will
-     * fail.
+     * throw [IllegalStateException].
      *
-     * @param event A previously recorded interval start event
+     * @param startEvent A previously recorded interval start event to complete
+     * @param endTimeNs Approximate time (in nanoseconds) the interval event ended on
+     *
+     * @throws IllegalArgumentException If [startEvent] has not been recorded as started, or this
+     *                                  method is called twice for the same event.
      */
-    fun recordEventEnd(event: IntervalStartEvent) {
-        val endTimeNs = System.nanoTime()
+    fun recordEventEnd(startEvent: IntervalStartEvent, endTimeNs: Long) {
         val endEvent: IntervalEndEvent
 
-        synchronized(event.lock) {
-            if (event.saved) {
-                throw IllegalStateException("recordEventEnd() cannot be called twice for event: " + event.name)
+        synchronized(startEvent.lock) {
+            if (!startEvent.recorded) {
+                throw IllegalStateException("Must first call recordEventStart() for event: $startEvent")
+            }
+            if (startEvent.published) {
+                throw IllegalStateException("recordEventEnd() cannot be called twice for event: $startEvent")
             }
 
-            event.saved = true
+            startEvent.published = true
 
-            endEvent = IntervalEndEvent(null, event.id, event.name, endTimeNs)
-            endEvent.loadAttributeData(event.getAttributeData(), includeSpecialAttributes = false)
+            endEvent = IntervalEndEvent(null, startEvent.id, startEvent.name, endTimeNs)
+            endEvent.loadAttributeData(startEvent.getAttributeData(), includeSpecialAttributes = false)
         }
 
         sink.publishEvent(endEvent)
@@ -71,11 +86,11 @@ class TimelineLogger(private val sink: TimelineLogSink) {
      */
     fun recordEvent(event: InstantEvent) {
         synchronized(event.lock) {
-            if (event.saved) {
+            if (event.published) {
                 throw IllegalStateException("recordEvent() cannot be called twice for event: " + event.name)
             }
 
-            event.saved = true
+            event.published = true
         }
 
         sink.publishEvent(event)

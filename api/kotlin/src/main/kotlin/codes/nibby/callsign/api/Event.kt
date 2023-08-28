@@ -51,7 +51,7 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
     val name: String
         get() = getSpecialAttribute(SPECIAL_NAME_ATTRIBUTE)!!
 
-    internal var saved: Boolean = false
+    internal var published: Boolean = false
     internal val lock = Object()
 
     private val attributeData = AttributeData(HashMap())
@@ -146,7 +146,7 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
 
     private fun assertNotSaved() {
         synchronized(lock) {
-            if (saved) {
+            if (published) {
                 throw IllegalStateException("Attempting to modify event after it has been saved: $name")
             }
         }
@@ -168,6 +168,10 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
         if (!isForSpecialAttribute && name.startsWith(SPECIAL_NAME_ATTRIBUTE)) {
             throw IllegalArgumentException("Name cannot begin with $SPECIAL_ATTRIBUTE_NAME_PREFIX")
         }
+    }
+
+    override fun toString(): String {
+        return "[Event '$name', id='$id']"
     }
 
     companion object {
