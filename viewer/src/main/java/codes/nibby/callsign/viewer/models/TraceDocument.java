@@ -5,6 +5,9 @@ import java.util.function.Consumer;
 
 public interface TraceDocument {
 
+    long UNDEFINED_START_TIME_NS = Long.MAX_VALUE;
+    long UNDEFINED_END_TIME_NS = Long.MIN_VALUE;
+
     void load() throws TraceDocumentAccessException;
 
     void unload() throws TraceDocumentAccessException;

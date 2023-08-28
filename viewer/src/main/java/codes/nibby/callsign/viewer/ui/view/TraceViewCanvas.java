@@ -1,7 +1,7 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-import codes.nibby.callsign.viewer.models.InstantTraceEvent;
-import codes.nibby.callsign.viewer.models.TimedTraceEvent;
+import codes.nibby.callsign.viewer.models.InstantTrace;
+import codes.nibby.callsign.viewer.models.IntervalTrace;
 import codes.nibby.callsign.viewer.models.TraceEvent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -16,7 +16,7 @@ final class TraceViewCanvas extends Canvas {
         this.graphics = getGraphicsContext2D();
     }
 
-    public void paint(TraceViewViewport viewport, TraceEventCollection viewableEvents, TraceViewColorScheme colorScheme) {
+    public void paint(TraceViewViewport viewport, TraceCollection viewableEvents, TraceViewColorScheme colorScheme) {
         graphics.setFill(colorScheme.getBackground());
         graphics.fillRect(0, 0, viewport.getWidth(), viewport.getHeight());
 
@@ -35,19 +35,19 @@ final class TraceViewCanvas extends Canvas {
 
         for (TraceEvent trace : trackData.getTraces()) {
 
-            if (trace instanceof TimedTraceEvent timedTrace) {
+            if (trace instanceof IntervalTrace intervalTrace) {
 
                 // TODO: Oh no I dun goofed...
-                if (timedTrace.getEndTimeNs() < 0) {
+                if (intervalTrace.getEndTimeNs() < 0) {
                     continue;
                 }
                 graphics.setFill(colorScheme.getTimedTraceEventBackground());
 
-                double xStart = viewport.getDisplayX(timedTrace.getStartTimeNs());
-                double xEnd = viewport.getDisplayX(timedTrace.getEndTimeNs());
+                double xStart = viewport.getDisplayX(intervalTrace.getStartTimeNs());
+                double xEnd = viewport.getDisplayX(intervalTrace.getEndTimeNs());
 
                 graphics.fillRect(xStart, yStart, xEnd, trackHeight);
-            } else if (trace instanceof InstantTraceEvent instantTrace) {
+            } else if (trace instanceof InstantTrace instantTrace) {
                 graphics.setFill(colorScheme.getInstantTraceEventBackground());
 
                 double xStart = viewport.getDisplayX(instantTrace.getTimeNs());

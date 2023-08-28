@@ -19,8 +19,7 @@ public final class TestDataGenerator {
     }
 
     public static void main(String[] args) throws InterruptedException {
-
-        generateMixedEvents(Paths.get(System.getProperty("user.dir")), "mixedEvents");
+//        generateMixedEvents(Paths.get(System.getProperty("user.dir")), "mixedEvents");
     }
 
     public static Result generateSingleInstantEvent() {
@@ -29,13 +28,6 @@ public final class TestDataGenerator {
         generateRandomAttributes(event, 10);
 
         return new Result(event);
-    }
-
-    private static void generateRandomAttributes(Event event, int maximumRandomAttributeCount) {
-        int attributes = (int) (Math.random() * maximumRandomAttributeCount);
-        for (int i = 0; i < attributes; i++) {
-            event.putAttribute("Attribute" + i, "AttributeValue" + i);
-        }
     }
 
     public static Result generateSingleIntervalStartEvent() {
@@ -75,8 +67,15 @@ public final class TestDataGenerator {
         return new Result(startEvent, endEvent);
     }
 
-    public static void generateMixedEvents(Path outputFolder, String nameWithoutExtension) throws InterruptedException {
-        TimelineLogger logger = new TimelineLogger(new CsvFileSink(outputFolder, nameWithoutExtension));
+    private static void generateRandomAttributes(Event event, int maximumRandomAttributeCount) {
+        int attributes = (int) (Math.random() * maximumRandomAttributeCount);
+        for (int i = 0; i < attributes; i++) {
+            event.putAttribute("Attribute" + i, "AttributeValue" + i);
+        }
+    }
+
+    public static void generateMixedEvents(Path outputFile) throws InterruptedException {
+        TimelineLogger logger = new TimelineLogger(new CsvFileSink(outputFile));
 
         var instantEvent = new InstantEvent("TestInstantEvent1", System.nanoTime());
         instantEvent.putAttribute("TestAttributeInstant", "abc");
@@ -117,7 +116,7 @@ public final class TestDataGenerator {
             this.generatedEvents = generatedEvents;
         }
 
-        public List<Event> getGeneratedEvents() {
+        public List<Event> asList() {
             return Collections.unmodifiableList(generatedEvents);
         }
 

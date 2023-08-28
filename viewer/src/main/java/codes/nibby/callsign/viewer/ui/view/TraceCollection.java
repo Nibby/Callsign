@@ -5,7 +5,7 @@ import codes.nibby.callsign.viewer.models.TraceDocumentAccessException;
 
 import java.util.*;
 
-final class TraceEventCollection {
+final class TraceCollection {
 
     private final Map<Track, TrackData> trackData = new TreeMap<>();
     private final Map<String, Track> tracks = new HashMap<>();

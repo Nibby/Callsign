@@ -11,25 +11,29 @@ import java.nio.file.StandardOpenOption
 /**
  * A [TimelineLogger] sink that persists events to a CSV format file on disk.
  */
-class CsvFileSink(outputFolder: Path, nameWithoutExtension: String) : TimelineLogSink {
+class CsvFileSink(outputFile: Path) : TimelineLogSink {
 
-    internal val outputFile: Path
+    private val realOutputFile: Path
 
     private val csvWriter: CsvWriter
     private val bufferedWriter: BufferedWriter
 
     init {
-        if (!Files.isDirectory((outputFolder))) {
-            Files.createDirectories(outputFolder)
+        val parentFolder = outputFile.parent
+
+        if (!Files.isDirectory((parentFolder))) {
+            Files.createDirectories(parentFolder)
         }
 
-        outputFile = outputFolder.resolve("$nameWithoutExtension.${CsvFormat.EXTENSION}")
+        val fileName = outputFile.fileName.toString()
+        val realFileName = "$fileName.${CsvFormat.EXTENSION}"
+        realOutputFile = parentFolder.resolve(realFileName)
 
-        if (!Files.exists(outputFile)) {
-            Files.createFile(outputFile)
+        if (!Files.exists(realOutputFile)) {
+            Files.createFile(realOutputFile)
         }
 
-        bufferedWriter = Files.newBufferedWriter(outputFile, CsvFormat.CHARSET, StandardOpenOption.APPEND)
+        bufferedWriter = Files.newBufferedWriter(realOutputFile, CsvFormat.CHARSET, StandardOpenOption.APPEND)
         csvWriter = CsvFormat.createWriter(bufferedWriter)
     }
 

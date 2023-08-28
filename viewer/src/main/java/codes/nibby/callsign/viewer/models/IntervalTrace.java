@@ -2,12 +2,12 @@ package codes.nibby.callsign.viewer.models;
 
 import java.util.Map;
 
-public final class TimedTraceEvent extends TraceEvent {
+public final class IntervalTrace extends TraceEvent {
 
     private final long startTimeNs;
     private final long endTimeNs;
 
-    public TimedTraceEvent(Map<String, String> attributes, long startTimeNs, long endTimeNs) {
+    public IntervalTrace(Map<String, String> attributes, long startTimeNs, long endTimeNs) {
         super(attributes);
 
         this.startTimeNs = startTimeNs;

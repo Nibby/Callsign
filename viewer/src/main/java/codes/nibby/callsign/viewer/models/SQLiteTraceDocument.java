@@ -18,9 +18,6 @@ import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.Even
 
 public class SQLiteTraceDocument implements TraceDocument {
 
-    public static final long UNDEFINED_START_TIME_NS = Long.MAX_VALUE;
-    public static final long UNDEFINED_END_TIME_NS = Long.MIN_VALUE;
-
     protected final Path path;
     protected Connection connection;
 
@@ -131,7 +128,7 @@ public class SQLiteTraceDocument implements TraceDocument {
         long timeNs = resultSet.getLong(EventsTable.COLUMN_TIME_NS);
 
         Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
-        TraceEvent entry = new InstantTraceEvent(attributes, timeNs);
+        TraceEvent entry = new InstantTrace(attributes, timeNs);
 
         consumer.accept(entry);
     }
@@ -171,14 +168,30 @@ public class SQLiteTraceDocument implements TraceDocument {
         final String startEventPrefix = "start";
         final String endEventPrefix = "finish";
 
+        // Actually just a FULL OUTER JOIN, but in SQLite dialect
+        // Essentially want to get all interval event pairs that either:
+        // - Has start but no end
+        // - Has start and has an end
+        // - No start but has an end
         ResultSet resultSet = statement.executeQuery(
             "SELECT " +
                 " " + startEventPrefix + "." + EventsTable.COLUMN_TIME_NS + ", " +
                 " " + endEventPrefix + ".* " +
             "FROM " + EventsTable.TABLE_NAME + " " + startEventPrefix + " " +
-            "JOIN " + EventsTable.TABLE_NAME + " " + endEventPrefix + " " +
-                "ON " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_ID + " = " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " " +
-            "WHERE " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_TYPE + " IN  ('" + IntervalStartEvent.TYPE + "', '" + IntervalEndEvent.TYPE + "')"
+                "LEFT OUTER JOIN " + EventsTable.TABLE_NAME + " " + endEventPrefix + " " +
+                    "ON " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_ID + " = " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " " +
+            "WHERE " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_TYPE + " = '" + IntervalStartEvent.TYPE + "' " +
+
+            "UNION ALL " +
+
+            "SELECT " +
+            " " + startEventPrefix + "." + EventsTable.COLUMN_TIME_NS + ", " +
+            " " + endEventPrefix + ".* " +
+            "FROM " + EventsTable.TABLE_NAME + " " + endEventPrefix + " " +
+                "LEFT OUTER JOIN " + EventsTable.TABLE_NAME + " " + startEventPrefix + " " +
+                    "ON " + startEventPrefix + "." + EventsTable.COLUMN_EVENT_ID + " = " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " " +
+            "WHERE " + endEventPrefix + "." + EventsTable.COLUMN_EVENT_TYPE + " = '" + IntervalEndEvent.TYPE + "' " +
+                "AND " + endEventPrefix + "." + EventsTable.COLUMN_CORRELATION_ID + " IS NULL"
         );
 
         while (resultSet.next()) {
@@ -210,7 +223,7 @@ public class SQLiteTraceDocument implements TraceDocument {
 
         Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
 
-        TraceEvent entry = new TimedTraceEvent(attributes, startTimeNs, endTimeNs);
+        TraceEvent entry = new IntervalTrace(attributes, startTimeNs, endTimeNs);
 
         consumer.accept(entry);
     }

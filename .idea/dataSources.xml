@@ -15,5 +15,17 @@
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/viewer/digest.cstd</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="testWritableSQLiteTraceDocument" uuid="f16d03bf-a81d-494d-9c97-a1f4972038da">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:/private/var/folders/1t/lxrwkjyx4xvd0r1qbyxlw4d00000gn/T/CallSignTest9531402206909284870/testWritableSQLiteTraceDocument</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.40.1/org/xerial/sqlite-jdbc/3.40.1.0/sqlite-jdbc-3.40.1.0.jar</url>
+        </library>
+      </libraries>
+    </data-source>
   </component>
 </project>

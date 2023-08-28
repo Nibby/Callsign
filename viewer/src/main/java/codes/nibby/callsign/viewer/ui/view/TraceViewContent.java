@@ -50,7 +50,7 @@ public final class TraceViewContent {
 
         viewport.recompute(width, height, earliestEventTimeNs, latestEventTimeNs);
 
-        TraceEventCollection viewableEvents = contentManager.compute(Event.SPECIAL_NAME_ATTRIBUTE, document);
+        TraceCollection viewableEvents = contentManager.compute(Event.SPECIAL_NAME_ATTRIBUTE, document);
         canvas.paint(viewport, viewableEvents, colorScheme);
     }
 
