@@ -1,4 +1,4 @@
-package codes.nibby.callsign.viewer.models;
+package codes.nibby.callsign.viewer.models.trace;
 
 import javax.annotation.Nullable;
 import java.util.Map;

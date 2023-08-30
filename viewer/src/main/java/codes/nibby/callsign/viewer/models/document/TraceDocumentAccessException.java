@@ -1,4 +1,4 @@
-package codes.nibby.callsign.viewer.models;
+package codes.nibby.callsign.viewer.models.document;
 
 public final class TraceDocumentAccessException extends Exception {
 

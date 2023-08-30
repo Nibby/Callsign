@@ -1,6 +1,6 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
 import org.jetbrains.annotations.Nullable;
 
 final class TraceViewContentManager {

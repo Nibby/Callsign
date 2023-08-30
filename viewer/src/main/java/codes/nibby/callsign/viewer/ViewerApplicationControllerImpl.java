@@ -1,6 +1,6 @@
 package codes.nibby.callsign.viewer;
 
-import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
 import codes.nibby.callsign.viewer.ui.UIHelper;
 import codes.nibby.callsign.viewer.ui.view.TraceViewWindow;
 

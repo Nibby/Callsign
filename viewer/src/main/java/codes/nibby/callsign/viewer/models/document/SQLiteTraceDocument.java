@@ -1,8 +1,12 @@
-package codes.nibby.callsign.viewer.models;
+package codes.nibby.callsign.viewer.models.document;
 
 import codes.nibby.callsign.api.InstantEvent;
 import codes.nibby.callsign.api.IntervalEndEvent;
 import codes.nibby.callsign.api.IntervalStartEvent;
+import codes.nibby.callsign.viewer.models.filters.TraceFilter;
+import codes.nibby.callsign.viewer.models.trace.InstantTrace;
+import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
+import codes.nibby.callsign.viewer.models.trace.Trace;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
@@ -14,8 +18,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.AttributeHeaderTable;
-import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.EventsTable;
+import static codes.nibby.callsign.viewer.models.document.SQLiteTraceDocument.Schema.AttributeHeaderTable;
+import static codes.nibby.callsign.viewer.models.document.SQLiteTraceDocument.Schema.EventsTable;
 
 public class SQLiteTraceDocument implements TraceDocument {
 
@@ -76,7 +80,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     }
 
     @Override
-    public void streamTraces(List<TraceEntryFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
+    public void streamTraces(List<TraceFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
         assertLoaded();
 
         try (Statement statement = connection.createStatement()) {
@@ -108,7 +112,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     private void streamInstantTraces(
         Statement statement,
         AttributeHeaderData headerData,
-        List<TraceEntryFilter> filters,
+        List<TraceFilter> filters,
         Consumer<Trace> consumer
     ) throws SQLException {
 
@@ -194,7 +198,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     private void streamIntervalTraces(
         Statement statement,
         AttributeHeaderData headerData,
-        List<TraceEntryFilter> filters,
+        List<TraceFilter> filters,
         Consumer<Trace> consumer
     ) throws SQLException {
 

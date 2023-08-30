@@ -1,4 +1,7 @@
-package codes.nibby.callsign.viewer.models;
+package codes.nibby.callsign.viewer.models.document;
+
+import codes.nibby.callsign.viewer.models.filters.TraceFilter;
+import codes.nibby.callsign.viewer.models.trace.Trace;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -13,7 +16,7 @@ public interface TraceDocument {
 
     void unload() throws TraceDocumentAccessException;
 
-    void streamTraces(List<TraceEntryFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException;
+    void streamTraces(List<TraceFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException;
 
     long getEarliestEventStartTimeNs();
 

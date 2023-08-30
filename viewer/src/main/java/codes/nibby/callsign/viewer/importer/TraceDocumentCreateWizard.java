@@ -2,8 +2,8 @@ package codes.nibby.callsign.viewer.importer;
 
 import codes.nibby.callsign.viewer.ViewerApplicationController;
 import codes.nibby.callsign.viewer.ViewerPreferences;
-import codes.nibby.callsign.viewer.models.TraceDocument;
-import codes.nibby.callsign.viewer.models.TraceDocumentFormat;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocumentFormat;
 import codes.nibby.callsign.viewer.ui.ProgressDialog;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;

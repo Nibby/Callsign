@@ -1,5 +1,10 @@
 package codes.nibby.callsign.viewer.models;
 
+import codes.nibby.callsign.viewer.models.document.SQLiteTraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
+import codes.nibby.callsign.viewer.models.document.WritableSQLiteTraceDocument;
+
 import java.io.IOException;
 import java.nio.file.Path;
 

@@ -3,6 +3,12 @@ package codes.nibby.callsign.viewer.models;
 import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.viewer.TestDataGenerator;
 import codes.nibby.callsign.viewer.TestHelper;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
+import codes.nibby.callsign.viewer.models.document.WritableTraceDocument;
+import codes.nibby.callsign.viewer.models.trace.InstantTrace;
+import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
+import codes.nibby.callsign.viewer.models.trace.Trace;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

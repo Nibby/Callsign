@@ -1,4 +1,4 @@
-package codes.nibby.callsign.viewer.models;
+package codes.nibby.callsign.viewer.models.document;
 
 import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.api.InstantEvent;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static codes.nibby.callsign.viewer.models.SQLiteTraceDocument.Schema.*;
+import static codes.nibby.callsign.viewer.models.document.SQLiteTraceDocument.Schema.*;
 
 public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument implements WritableTraceDocument {
 

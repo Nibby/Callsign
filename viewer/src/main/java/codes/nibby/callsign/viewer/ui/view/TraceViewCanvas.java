@@ -1,8 +1,8 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-import codes.nibby.callsign.viewer.models.InstantTrace;
-import codes.nibby.callsign.viewer.models.IntervalTrace;
-import codes.nibby.callsign.viewer.models.Trace;
+import codes.nibby.callsign.viewer.models.trace.InstantTrace;
+import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
+import codes.nibby.callsign.viewer.models.trace.Trace;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 

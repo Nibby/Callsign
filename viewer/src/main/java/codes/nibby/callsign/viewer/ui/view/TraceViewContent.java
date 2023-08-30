@@ -1,7 +1,7 @@
 package codes.nibby.callsign.viewer.ui.view;
 
 import codes.nibby.callsign.api.Event;
-import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
 import codes.nibby.callsign.viewer.ui.CanvasContainer;
 import javafx.scene.layout.BorderPane;
 

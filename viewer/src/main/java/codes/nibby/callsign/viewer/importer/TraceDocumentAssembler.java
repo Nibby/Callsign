@@ -1,7 +1,7 @@
 package codes.nibby.callsign.viewer.importer;
 
 import codes.nibby.callsign.viewer.misc.ProgressReporter;
-import codes.nibby.callsign.viewer.models.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocument;
 
 import java.io.IOException;
 import java.nio.file.Path;
