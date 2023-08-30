@@ -341,6 +341,11 @@ public class SQLiteTraceDocument implements TraceDocument {
         return latestEventEndTimeNs;
     }
 
+    @Override
+    public final Path getPath() {
+        return path;
+    }
+
     // TODO: Probably need to version these later
     protected static final class Schema {
         static final class EventsTable {

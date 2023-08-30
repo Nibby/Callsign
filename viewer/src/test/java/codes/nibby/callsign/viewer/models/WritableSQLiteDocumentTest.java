@@ -3,21 +3,28 @@ package codes.nibby.callsign.viewer.models;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class WritableSQLiteDocumentTest extends WritableTraceDocumentTest<WritableSQLiteTraceDocument> {
+public class WritableSQLiteDocumentTest extends WritableTraceDocumentTest {
 
     public WritableSQLiteDocumentTest() throws IOException {
     }
 
     @Override
-    protected WritableSQLiteTraceDocument createInstance(Path testDir) {
-        try {
-            return new WritableSQLiteTraceDocument(createTestOutputFile(testDir));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    protected WritableSQLiteTraceDocument createWritableInstance(Path testDir) throws IOException {
+        var document = new WritableSQLiteTraceDocument(createTestOutputFile(testDir));
+        document.initialize();
+
+        return document;
     }
 
-    private static Path createTestOutputFile(Path testDir) throws IOException {
+    @Override
+    protected TraceDocument createInstance(Path traceDigestFile) throws TraceDocumentAccessException {
+        var document = new SQLiteTraceDocument(traceDigestFile);
+        document.load();
+
+        return document;
+    }
+
+    private static Path createTestOutputFile(Path testDir) {
         return testDir.resolve("testWritableSQLiteTraceDocument");
     }
 }

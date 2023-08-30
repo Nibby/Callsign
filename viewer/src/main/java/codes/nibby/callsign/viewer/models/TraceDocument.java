@@ -1,5 +1,6 @@
 package codes.nibby.callsign.viewer.models;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -17,5 +18,7 @@ public interface TraceDocument {
     long getEarliestEventStartTimeNs();
 
     long getLatestEventEndTimeNs();
+
+    Path getPath();
 
 }

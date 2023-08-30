@@ -12,10 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -262,12 +259,12 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
     private void updateMetadataIfApplicable(Long startTimeNs, Long endTimeNs) throws SQLException {
         boolean metadataChanged = false;
 
-        if (startTimeNs != null && earliestEventStartTimeNs != startTimeNs) {
+        if (startTimeNs != null && !Objects.equals(earliestEventStartTimeNs, startTimeNs)) {
             earliestEventStartTimeNs = Math.min(earliestEventStartTimeNs, startTimeNs);
             metadataChanged = true;
         }
 
-        if (endTimeNs != null && latestEventEndTimeNs != endTimeNs) {
+        if (endTimeNs != null && !Objects.equals(latestEventEndTimeNs, endTimeNs)) {
             latestEventEndTimeNs = Math.max(latestEventEndTimeNs, endTimeNs);
             metadataChanged = true;
         }
