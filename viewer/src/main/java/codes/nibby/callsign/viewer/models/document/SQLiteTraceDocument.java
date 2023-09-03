@@ -4,6 +4,7 @@ import codes.nibby.callsign.api.InstantEvent;
 import codes.nibby.callsign.api.IntervalEndEvent;
 import codes.nibby.callsign.api.IntervalStartEvent;
 import codes.nibby.callsign.viewer.models.filters.TraceFilter;
+import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import codes.nibby.callsign.viewer.models.trace.InstantTrace;
 import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
 import codes.nibby.callsign.viewer.models.trace.Trace;
@@ -26,8 +27,8 @@ public class SQLiteTraceDocument implements TraceDocument {
     protected final Path path;
     protected Connection connection;
 
-    protected Long earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
-    protected Long latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
+    protected long earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
+    protected long latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
     protected boolean hasMetadataRow = false;
 
     protected final Object stateLock = new Object();
@@ -80,7 +81,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     }
 
     @Override
-    public void streamTraces(List<TraceFilter> filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
+    public void streamTraces(TraceFilters filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
         assertLoaded();
 
         try (Statement statement = connection.createStatement()) {
@@ -112,7 +113,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     private void streamInstantTraces(
         Statement statement,
         AttributeHeaderData headerData,
-        List<TraceFilter> filters,
+        TraceFilters filters,
         Consumer<Trace> consumer
     ) throws SQLException {
 
@@ -198,7 +199,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     private void streamIntervalTraces(
         Statement statement,
         AttributeHeaderData headerData,
-        List<TraceFilter> filters,
+        TraceFilters filters,
         Consumer<Trace> consumer
     ) throws SQLException {
 

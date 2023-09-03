@@ -14,9 +14,30 @@ public final class TestDataGenerator {
     private TestDataGenerator() {
     }
 
-    public static void main(String[] args) throws InterruptedException {
-//        generateMixedEvents(Paths.get(System.getProperty("user.dir")), "mixedEvents");
-        generateIntervalEventPair().publishTo(new CsvFileSink(Paths.get(System.getProperty("user.home")).resolve("testDataFile")));
+    public static void main(String[] args) {
+        Result result = generateIntervalEventPair();
+
+        for (int i = 0; i < 20; i++) {
+            Event event = generateSingleInstantEvent().asList().get(0);
+            event.putAttribute("index", String.valueOf(i));
+
+            result = result.combine(new Result(event));
+
+            int intervals = (int) (Math.random() * 10);
+            for (int ii = 0; ii < intervals; ii++) {
+                Result result1 = generateIntervalEventPair(TimeUnit.SECONDS.toNanos((int) (Math.random() * 5)));
+                result1.generatedEvents.get(0).putAttribute("index", String.valueOf(i));
+                result1.generatedEvents.get(1).putAttribute("index", String.valueOf(i));
+                result = result.combine(result1);
+                try {
+                    Thread.sleep((int) (Math.random() * 1000) + 10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        result.publishTo(new CsvFileSink(Paths.get(System.getProperty("user.dir")).resolve("testDataGeneratorData2")));
     }
 
     public static Result generateSingleInstantEvent() {

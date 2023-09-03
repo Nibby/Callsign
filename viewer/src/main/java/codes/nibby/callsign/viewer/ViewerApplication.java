@@ -26,10 +26,10 @@ public final class ViewerApplication extends Application {
 
         var pane = new FlowPane(Orientation.VERTICAL);
         {
-            var importTrace = new Button("Create a new timeline digest");
+            var importTrace = new Button("New Trace Digest");
             importTrace.setOnAction(event -> createDigest(primaryStage));
 
-            var openTimelineDigest = new Button("Open an existing timeline digest");
+            var openTimelineDigest = new Button("Open Trace Digest");
             openTimelineDigest.setOnAction(event -> openDigest());
 
             pane.getChildren().addAll(importTrace, openTimelineDigest);

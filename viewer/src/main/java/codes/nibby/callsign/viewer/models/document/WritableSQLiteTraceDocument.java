@@ -124,8 +124,8 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             ResultSet resultSet = statement.executeQuery("SELECT * FROM " + AttributeHeaderTable.TABLE_NAME);
 
             while (resultSet.next()) {
-                String columnName = resultSet.getString("column_name");
-                String attributeName = resultSet.getString("attribute_name");
+                String columnName = resultSet.getString(AttributeHeaderTable.COLUMN_COLUMN_NAME);
+                String attributeName = resultSet.getString(AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME);
 
                 attributeNameLookup.put(columnName, attributeName);
             }
@@ -260,12 +260,18 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         boolean metadataChanged = false;
 
         if (startTimeNs != null && !Objects.equals(earliestEventStartTimeNs, startTimeNs)) {
-            earliestEventStartTimeNs = Math.min(earliestEventStartTimeNs, startTimeNs);
+            earliestEventStartTimeNs = earliestEventStartTimeNs == UNDEFINED_START_TIME_NS
+                ? startTimeNs
+                : Math.min(earliestEventStartTimeNs, startTimeNs);
+
             metadataChanged = true;
         }
 
         if (endTimeNs != null && !Objects.equals(latestEventEndTimeNs, endTimeNs)) {
-            latestEventEndTimeNs = Math.max(latestEventEndTimeNs, endTimeNs);
+            latestEventEndTimeNs = latestEventEndTimeNs == UNDEFINED_END_TIME_NS
+                ? endTimeNs
+                : Math.max(latestEventEndTimeNs, endTimeNs);
+
             metadataChanged = true;
         }
 

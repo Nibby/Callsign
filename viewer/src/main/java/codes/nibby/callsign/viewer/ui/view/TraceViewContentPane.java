@@ -1,35 +1,45 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.viewer.models.document.TraceDocument;
+import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import codes.nibby.callsign.viewer.ui.CanvasContainer;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 
-public final class TraceViewContent {
+import java.util.Map;
+
+public final class TraceViewContentPane {
 
     private final BorderPane contentPane;
 
     private TraceDocument document;
 
-    private TraceViewColorScheme colorScheme;
-    private final TraceViewContentManager contentManager;
     private final TraceViewViewport viewport;
+    private final TraceViewTraceContentManager contentManager;
+    private final TraceViewColorScheme colorScheme;
+    private final TraceFilters traceFilters;
 
     private final TraceViewCanvas canvas;
+    private final TraceViewGutter gutter;
+    private final SplitPane canvasGutterSplitter;
 
-
-    public TraceViewContent() {
+    public TraceViewContentPane() {
         contentPane = new BorderPane();
 
-        canvas = new TraceViewCanvas();
+        traceFilters = new TraceFilters();
         colorScheme = new TraceViewLightColorScheme();
-        contentManager = new TraceViewContentManager();
+        contentManager = new TraceViewTraceContentManager();
         viewport = new TraceViewViewport();
 
+        canvas = new TraceViewCanvas();
         var canvasWrapper = new CanvasContainer(canvas);
         canvasWrapper.addSizeUpdateListener(newSize -> refreshContent(newSize.getWidth(), newSize.getHeight()));
 
-        contentPane.setCenter(canvasWrapper);
+        gutter = new TraceViewGutter();
+
+        canvasGutterSplitter = new SplitPane(gutter.getComponent(), canvasWrapper);
+        canvasGutterSplitter.setDividerPosition(0, 0.25d);
+        contentPane.setCenter(canvasGutterSplitter);
     }
 
     private void refreshContent() {
@@ -48,10 +58,17 @@ public final class TraceViewContent {
         long earliestEventTimeNs = document.getEarliestEventStartTimeNs();
         long latestEventTimeNs = document.getLatestEventEndTimeNs();
 
-        viewport.recompute(width, height, earliestEventTimeNs, latestEventTimeNs);
+        boolean viewportChanged = viewport.applyProperties(width, height, earliestEventTimeNs, latestEventTimeNs);
 
-        TraceCollection viewableEvents = contentManager.compute(Event.SPECIAL_NAME_ATTRIBUTE, document);
-        canvas.paint(viewport, viewableEvents, colorScheme);
+        long displayedEarliestTimeNs = viewport.getDisplayedEarliestEventTimeNs();
+        long displayedLatestTimeNs = viewport.getDisplayedLatestEventTimeNs();
+
+        traceFilters.setDisplayedTimeInterval(displayedEarliestTimeNs, displayedLatestTimeNs);
+
+        TraceCollection traces = contentManager.computeContent(document, "index", traceFilters);
+
+        gutter.paint(viewport, traces, colorScheme);
+        canvas.paint(viewport, traces, colorScheme);
     }
 
     public BorderPane getComponent() {

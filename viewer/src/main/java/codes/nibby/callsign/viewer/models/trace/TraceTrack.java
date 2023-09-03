@@ -1,25 +1,40 @@
-package codes.nibby.callsign.viewer.ui.view;
+package codes.nibby.callsign.viewer.models.trace;
 
-import codes.nibby.callsign.viewer.models.trace.InstantTrace;
-import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
-import codes.nibby.callsign.viewer.models.trace.Trace;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-final class Track implements Comparable<Track> {
+public final class TraceTrack implements Comparable<TraceTrack> {
 
-    private final String name;
+    private final String binningAttributeName;
+    private final String binningAttributeValue;
+    private final String displayAttributeName;
 
     private Long earliestEntryTimeNs = null;
     private Long latestEntryEndTimeNs = null;
 
-    public Track(String name) {
-        this.name = name;
+    private boolean needsProcessing = false;
+
+    public TraceTrack(
+        String binningAttributeName,
+        String binningAttributeValue,
+        String displayAttributeName
+    ) {
+        this.binningAttributeName = binningAttributeName;
+        this.binningAttributeValue = binningAttributeValue;
+        this.displayAttributeName = displayAttributeName;
     }
 
-    public String getName() {
-        return name;
+    public String getBinningAttributeName() {
+        return binningAttributeName;
+    }
+
+    public String getDisplayAttributeName() {
+        return displayAttributeName;
+    }
+
+    public String getBinningAttributeValue() {
+        return binningAttributeValue;
     }
 
     public void notifyTraceAdded(Trace event) {
@@ -51,22 +66,31 @@ final class Track implements Comparable<Track> {
         return latestEntryEndTimeNs;
     }
 
+    public boolean isNeedsProcessing() {
+        return needsProcessing;
+    }
+
+    public void setNeedsProcessing(boolean needsProcessing) {
+        this.needsProcessing = needsProcessing;
+    }
+
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return Objects.hash(binningAttributeName, displayAttributeName);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Track other)) {
+        if (!(obj instanceof TraceTrack other)) {
             return false;
         }
 
-        return Objects.equals(name, other.name);
+        return Objects.equals(binningAttributeName, other.binningAttributeName)
+            && Objects.equals(displayAttributeName, other.displayAttributeName);
     }
 
     @Override
-    public int compareTo(@NotNull Track other) {
+    public int compareTo(@NotNull TraceTrack other) {
         if (this.earliestEntryTimeNs == null) {
             return 1;
         }

@@ -6,6 +6,7 @@ import codes.nibby.callsign.viewer.TestHelper;
 import codes.nibby.callsign.viewer.models.document.TraceDocument;
 import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.document.WritableTraceDocument;
+import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import codes.nibby.callsign.viewer.models.trace.InstantTrace;
 import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
 import codes.nibby.callsign.viewer.models.trace.Trace;
@@ -53,7 +54,7 @@ public abstract class WritableTraceDocumentTest {
 
         testReadBack(writableDocument, document -> {
             List<Trace> traces = new ArrayList<>();
-            document.streamTraces(List.of(), traces::add);
+            document.streamTraces(new TraceFilters(), traces::add);
 
             assertEquals(1, traces.size());
 
@@ -76,7 +77,7 @@ public abstract class WritableTraceDocumentTest {
 
         testReadBack(writableDocument, document -> {
             List<Trace> traces = new ArrayList<>();
-            document.streamTraces(List.of(), traces::add);
+            document.streamTraces(new TraceFilters(), traces::add);
 
             assertEquals(1, traces.size());
 
@@ -103,7 +104,7 @@ public abstract class WritableTraceDocumentTest {
 
         testReadBack(writableDocument, document -> {
             List<Trace> traces = new ArrayList<>();
-            document.streamTraces(List.of(), traces::add);
+            document.streamTraces(new TraceFilters(), traces::add);
 
             assertEquals(1, traces.size());
 
@@ -136,7 +137,7 @@ public abstract class WritableTraceDocumentTest {
 
         testReadBack(writableDocument, document -> {
             List<Trace> traces = new ArrayList<>();
-            document.streamTraces(List.of(), traces::add);
+            document.streamTraces(new TraceFilters(), traces::add);
 
             assertEquals(1, traces.size());
 

@@ -9,10 +9,10 @@ public final class TraceViewWindow {
 
     private final Stage stage;
     private final Scene scene;
-    private final TraceViewContent content;
+    private final TraceViewContentPane content;
 
     public TraceViewWindow() {
-        content = new TraceViewContent();
+        content = new TraceViewContentPane();
 
         scene = new Scene(content.getComponent(), 800, 600);
 

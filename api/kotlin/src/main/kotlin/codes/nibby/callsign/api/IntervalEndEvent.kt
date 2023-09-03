@@ -45,6 +45,6 @@ class IntervalEndEvent internal constructor(
         const val TYPE = "t-e"
     }
 
-    constructor(correlationId: UUID, name: String, timeNs: Long) : this(null, correlationId, name, timeNs)
+    internal constructor(correlationId: UUID, name: String, timeNs: Long) : this(null, correlationId, name, timeNs)
 
 }
