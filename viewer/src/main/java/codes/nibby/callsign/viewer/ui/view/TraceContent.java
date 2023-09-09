@@ -90,6 +90,14 @@ final class TraceContent {
         return latestTraceEventEndNs;
     }
 
+    public String getTrackDisplayAttributeName() {
+        return trackDisplayAttributeName;
+    }
+
+    public String getTrackBinningAttributeName() {
+        return trackBinningAttributeName;
+    }
+
     public static final class DisplayData {
 
         private final List<TraceTrack> trackDisplayOrder = new ArrayList<>();

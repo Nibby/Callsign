@@ -5,6 +5,8 @@ import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 final class TraceViewTraceContentManager {
 
     @Nullable
@@ -15,10 +17,14 @@ final class TraceViewTraceContentManager {
 
     public TraceContent computeContent(
         TraceDocument document,
-        String trackBinningAttributeName,
+        @Nullable String trackBinningAttributeName,
         TraceFilters filters
     ) {
-        // TODO: Don't need to recreate this every time; only load what's extra & discard what's long unused
+        if (trackBinningAttributeName == null) {
+            traceContent = null;
+            return null;
+        }
+
         traceContent = new TraceContent(trackBinningAttributeName, trackBinningAttributeName);
 
         populateTraces(document, filters, traceContent);

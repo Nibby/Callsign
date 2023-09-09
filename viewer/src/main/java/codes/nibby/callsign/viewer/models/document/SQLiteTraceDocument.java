@@ -3,7 +3,6 @@ package codes.nibby.callsign.viewer.models.document;
 import codes.nibby.callsign.api.InstantEvent;
 import codes.nibby.callsign.api.IntervalEndEvent;
 import codes.nibby.callsign.api.IntervalStartEvent;
-import codes.nibby.callsign.viewer.models.filters.TraceFilter;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import codes.nibby.callsign.viewer.models.trace.InstantTrace;
 import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
@@ -30,6 +29,7 @@ public class SQLiteTraceDocument implements TraceDocument {
     protected long earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
     protected long latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
     protected boolean hasMetadataRow = false;
+    protected volatile AttributeHeaderData attributeHeaderData = null;
 
     protected final Object stateLock = new Object();
 
@@ -81,33 +81,49 @@ public class SQLiteTraceDocument implements TraceDocument {
     }
 
     @Override
-    public void streamTraces(TraceFilters filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
+    public List<String> getAllAttributeNames() throws TraceDocumentAccessException {
         assertLoaded();
 
-        try (Statement statement = connection.createStatement()) {
-            // TODO: Don't need to do this every time if document hasn't changed since it was loaded
-            AttributeHeaderData headerData = loadAttributeHeaderData(statement);
+        loadAttributeHeaderDataIfNecessary();
 
-            streamInstantTraces(statement, headerData, filters, consumer);
-            streamIntervalTraces(statement, headerData, filters, consumer);
-        } catch (SQLException e) {
-            throw new TraceDocumentAccessException(e);
+        return new ArrayList<>(attributeHeaderData.columnNameToAttributeName.values());
+    }
+
+    private void loadAttributeHeaderDataIfNecessary() throws TraceDocumentAccessException {
+        if (attributeHeaderData == null) {
+            synchronized (stateLock) {
+                if (attributeHeaderData == null) {
+                    try (Statement statement = connection.createStatement()) {
+                        attributeHeaderData = new AttributeHeaderData();
+
+                        ResultSet resultSet = statement.executeQuery("SELECT * FROM " + AttributeHeaderTable.TABLE_NAME);
+
+                        while (resultSet.next()) {
+                            String columnName = resultSet.getString(AttributeHeaderTable.COLUMN_COLUMN_NAME);
+                            String attributeName = resultSet.getString(AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME);
+
+                            attributeHeaderData.columnNameToAttributeName.put(columnName, attributeName);
+                        }
+                    } catch (SQLException e) {
+                        throw new TraceDocumentAccessException(e);
+                    }
+                }
+            }
         }
     }
 
-    private AttributeHeaderData loadAttributeHeaderData(Statement statement) throws SQLException {
-        var headerData = new AttributeHeaderData();
+    @Override
+    public void streamTraces(TraceFilters filters, Consumer<Trace> consumer) throws TraceDocumentAccessException {
+        assertLoaded();
 
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM " + AttributeHeaderTable.TABLE_NAME);
+        loadAttributeHeaderDataIfNecessary();
 
-        while (resultSet.next()) {
-            String columnName = resultSet.getString(AttributeHeaderTable.COLUMN_COLUMN_NAME);
-            String attributeName = resultSet.getString(AttributeHeaderTable.COLUMN_ATTRIBUTE_NAME);
-
-            headerData.columnNameToAttributeName.put(columnName, attributeName);
+        try (Statement statement = connection.createStatement()) {
+            streamInstantTraces(statement, attributeHeaderData, filters, consumer);
+            streamIntervalTraces(statement, attributeHeaderData, filters, consumer);
+        } catch (SQLException e) {
+            throw new TraceDocumentAccessException(e);
         }
-
-        return headerData;
     }
 
     private void streamInstantTraces(
@@ -380,7 +396,7 @@ public class SQLiteTraceDocument implements TraceDocument {
         }
     }
 
-    private static final class AttributeHeaderData {
+    protected static final class AttributeHeaderData {
 
         private final BiMap<String, String> columnNameToAttributeName = HashBiMap.create();
 

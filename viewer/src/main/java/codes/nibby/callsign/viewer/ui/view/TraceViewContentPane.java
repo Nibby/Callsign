@@ -1,6 +1,7 @@
 package codes.nibby.callsign.viewer.ui.view;
 
 import codes.nibby.callsign.viewer.models.document.TraceDocument;
+import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import codes.nibby.callsign.viewer.ui.CanvasContainer;
 import javafx.geometry.Orientation;
@@ -8,6 +9,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -29,10 +31,19 @@ public final class TraceViewContentPane {
     private final ScrollBar canvasHorizontalScroll;
     private final ScrollBar canvasVerticalScroll;
 
+    private String binningAttribute = null;
+    private boolean showInstantEvents = true;
+    private boolean showIntervalEvents = true;
+
     public TraceViewContentPane() {
         rootPane = new BorderPane();
 
         toolbar = new TraceViewToolbar();
+        toolbar.setBinningAttributeChangeCallback(this::handleBinningAttributeChanged);
+        toolbar.setToggleShowInstantEventsCallback(this::handleShowInstantEventSettingChanged);
+        toolbar.setToggleShowIntervalEventsCallback(this::handleShowIntervalEventSettingChanged);
+        toolbar.setZoomLevelChangeCallback(this::handleHorizontalZoomLevelChanged);
+
         rootPane.setTop(toolbar.getComponent());
 
         contentPane = new BorderPane();
@@ -85,6 +96,35 @@ public final class TraceViewContentPane {
         contentPane.setCenter(canvasContent);
     }
 
+    private void handleShowIntervalEventSettingChanged(boolean show) {
+        if (showIntervalEvents != show) {
+            showIntervalEvents = show;
+            refreshContent();
+        }
+    }
+
+    private void handleShowInstantEventSettingChanged(boolean show) {
+        if (showInstantEvents != show) {
+            showInstantEvents = show;
+            refreshContent();
+        }
+    }
+
+    private void handleBinningAttributeChanged(String newBinningAttribute) {
+        if (!Objects.equals(this.binningAttribute, newBinningAttribute)) {
+            this.binningAttribute = newBinningAttribute;
+        }
+
+        refreshContent();
+    }
+
+    private void handleHorizontalZoomLevelChanged(double newZoomLevel) {
+        if (Math.abs(perspective.getTrackHorizontalZoomLevel() - newZoomLevel) > 0.0001d) {
+            perspective.setHorizontalZoom(newZoomLevel);
+            refreshContent();
+        }
+    }
+
     private void handleCanvasScroll(ScrollEvent event) {
         if (event.isShiftDown()) {
             // Horizontal scroll left/right
@@ -93,26 +133,27 @@ public final class TraceViewContentPane {
             }
         } else if (event.isAltDown()) {
             // Horizontal zoom in/out
-            double zoom = perspective.getTrackHorizontalZoomFactor();
+            double zoom = perspective.getTrackHorizontalZoomLevel();
 
             if (event.getTotalDeltaY() > 0) {
-                if (zoom < 10d) {
-                    zoom += 0.1d;
-                }
+                adjustZoom(0.5d);
             } else {
-                if (zoom > 0.11d) {
-                    zoom -= 0.1d;
-                }
+                adjustZoom(-0.5d);
             }
-
-            perspective.setHorizontalZoom(zoom);
-            refreshContent();
         } else {
             // Vertical scroll up/down
             if (!canvasVerticalScroll.isDisabled()) {
                 canvasVerticalScroll.adjustValue(-(event.getTotalDeltaY()));
             }
         }
+    }
+
+    private void adjustZoom(double amount) {
+        double currentZoom = perspective.getTrackHorizontalZoomLevel();
+        perspective.setHorizontalZoom(currentZoom + amount);
+        toolbar.notifyZoomLevelChanged(currentZoom + amount);
+
+        refreshContent();
     }
 
     private void refreshContent() {
@@ -124,20 +165,24 @@ public final class TraceViewContentPane {
 
         boolean viewportChanged = perspective.applyProperties(totalWidth, totalHeight, earliestEventTimeNs, latestEventTimeNs);
 
-        TraceContent traces;
+        @Nullable TraceContent traces;
 
-        if (viewportChanged) {
-            long displayedEarliestTimeNs = perspective.getDisplayedEarliestEventTimeNs();
-            long displayedLatestTimeNs = perspective.getDisplayedLatestEventTimeNs();
+        if (binningAttribute != null) {
+            if (viewportChanged) {
+                long displayedEarliestTimeNs = perspective.getDisplayedEarliestEventTimeNs();
+                long displayedLatestTimeNs = perspective.getDisplayedLatestEventTimeNs();
 
-            traceFilters.setDisplayedTimeInterval(displayedEarliestTimeNs, displayedLatestTimeNs);
+                traceFilters.setDisplayedTimeInterval(displayedEarliestTimeNs, displayedLatestTimeNs);
 
-            traces = contentManager.computeContent(document, "index", traceFilters);
+                traces = contentManager.computeContent(document, binningAttribute, traceFilters);
+            } else {
+                traces = Objects.requireNonNull(contentManager.getLastComputedContent(), "no last computed content");
+            }
+
+            updateScrollbars(traces);
         } else {
-            traces = Objects.requireNonNull(contentManager.getLastComputedContent(), "no last computed content");
+            traces = null;
         }
-
-        updateScrollbars(traces);
 
         canvas.paint(perspective, traces, colorScheme);
     }
@@ -198,7 +243,7 @@ public final class TraceViewContentPane {
         } else {
             canvasVerticalScroll.setMax(0);
             canvasVerticalScroll.setVisibleAmount(0);
-            canvasHorizontalScroll.setValue(0);
+            canvasVerticalScroll.setValue(0);
         }
     }
 
@@ -208,6 +253,13 @@ public final class TraceViewContentPane {
 
     public void setDocument(TraceDocument document) {
         this.document = document;
+
+        try {
+            this.toolbar.notifyAvailableBinningAttributes(document.getAllAttributeNames());
+        } catch (TraceDocumentAccessException e) {
+            throw new RuntimeException(e);
+        }
+
         refreshContent();
     }
 }

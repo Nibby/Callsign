@@ -2,6 +2,9 @@ package codes.nibby.callsign.viewer.ui.view;
 
 public interface TraceViewPerspective {
 
+    double MAX_ZOOM = 20; // 2000 %
+    double MIN_ZOOM = 0.1d;
+
     double getGutterWidth();
 
     double getDividerSize();

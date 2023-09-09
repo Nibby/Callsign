@@ -147,6 +147,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
                 // TODO: This can be greatly optimised, do later
 
                 if (!missingAttributeNames.isEmpty()) {
+                    attributeHeaderData = null;
                     createMissingAttributeNames(missingAttributeNames);
                 }
 

@@ -24,7 +24,7 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
 
     private long displayStartTimeOffsetNs = 0;      // dictates horizontal scroll, leftmost edge of screen = earliestEventTimeNs + this
     private long displayTimeRangeNs = 1;            // viewportWidth expressed in timeNs terms
-    private double trackHorizontalZoomFactor = 1d;
+    private double trackHorizontalZoomLevel = 1d;
 
     private boolean firstCompute = true;
 
@@ -86,13 +86,9 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
      * @param zoomLevel Zoom level ({@code 0 < zoomLevel < ?}
      */
     public void setHorizontalZoom(double zoomLevel) {
-        if (zoomLevel <= 0d) {
-            throw new IllegalArgumentException("zoomLevel must be > 0d");
-        }
+        this.trackHorizontalZoomLevel = Math.min(Math.max(zoomLevel, MIN_ZOOM), MAX_ZOOM);
 
-        this.trackHorizontalZoomFactor = zoomLevel;
-
-        double portionOfTimelineInView = 1d / trackHorizontalZoomFactor;
+        double portionOfTimelineInView = 1d / trackHorizontalZoomLevel;
         this.displayTimeRangeNs = (long) Math.ceil(totalTimeRangeNs * portionOfTimelineInView);
     }
 
@@ -159,8 +155,8 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     /**
      * @return Horizontal track zoom factor
      */
-    public double getTrackHorizontalZoomFactor() {
-        return trackHorizontalZoomFactor;
+    public double getTrackHorizontalZoomLevel() {
+        return trackHorizontalZoomLevel;
     }
 
     @Override
