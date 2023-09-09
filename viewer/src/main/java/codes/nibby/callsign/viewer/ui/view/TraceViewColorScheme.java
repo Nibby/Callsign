@@ -4,10 +4,19 @@ import javafx.scene.paint.Color;
 
 public interface TraceViewColorScheme {
 
-    Color getBackground();
+    Color getContentBackground();
+    Color getContentRowBackground();
+    Color getContentAlternateRowBackground();
+
+    Color getGutterBackground();
+    Color getGutterRowBackground();
+    Color getGutterAlternateRowBackground();
 
     Color getInstantTraceEventBackground();
-    Color getTimedTraceEventBackground();
+    Color getInstantTraceEventOutline();
+
+    Color getIntervalTraceEventBackground();
+    Color getIntervalTraceEventOutline();
 
     Color getTimelineBaseForeground();
     Color getTimelineMajorTick();

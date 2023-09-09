@@ -6,15 +6,13 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
-public abstract class Trace {
+public sealed abstract class Trace permits InstantTrace, IntervalTrace {
 
     private final String name;
     private final Map<String, String> attributes;
 
     @Nullable
     private TraceTrack track = null;
-
-    private boolean needsProcessing = true;
 
     public Trace(Map<String, String> attributes) {
         this.attributes = attributes;
@@ -36,21 +34,5 @@ public abstract class Trace {
 
     public void setTrack(@Nullable TraceTrack track) {
         this.track = track;
-
-         if (needsProcessing && track != null) {
-             track.setNeedsProcessing(true);
-         }
-    }
-
-    public boolean isNeedsProcessing() {
-        return needsProcessing;
-    }
-
-    public void setNeedsProcessing(boolean needsProcessing) {
-        this.needsProcessing = needsProcessing;
-
-        if (needsProcessing && track != null) {
-            track.setNeedsProcessing(true);
-        }
     }
 }

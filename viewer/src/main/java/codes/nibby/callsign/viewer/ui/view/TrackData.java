@@ -11,13 +11,8 @@ final class TrackData {
     private final Map<Integer, List<Trace>> traces = new LinkedHashMap<>();
 
     public void addTrace(Trace newTrace) {
-        // TODO: Naive algorithm to get things running, insertion time can be improved
-        // For now: all instant traces are in band 0
-        //          timed traces may be put into new bands if they cannot be placed in existing bands without overlap
-
         if (newTrace instanceof InstantTrace) {
             traces.computeIfAbsent(0, key -> new LinkedList<>()).add(newTrace);
-            return;
         } else if (newTrace instanceof IntervalTrace intervalTrace) {
             addIntervalTrace(intervalTrace);
         } else {
@@ -32,9 +27,10 @@ final class TrackData {
         // Interval traces only
         int bandToUse = 0;
 
+        // Avoid overlaps in interval traces by placing them into separate bands on the same track
         findFreeSpotInNextBand:
-        for (int band = 0; band < Math.min(1, traces.size()); band++) {
-            List<Trace> bandTraces = traces.computeIfAbsent(band, key -> new LinkedList<>());
+        do {
+            List<Trace> bandTraces = traces.computeIfAbsent(bandToUse, key -> new LinkedList<>());
 
             for (Trace trace : bandTraces) {
                 if (!(trace instanceof IntervalTrace intervalTrace)) {
@@ -45,18 +41,14 @@ final class TrackData {
                 long otherEndTimeNs = intervalTrace.getEndTimeNs();
 
                 if (otherStartTimeNs >= startTimeNs && otherStartTimeNs <= endTimeNs || otherEndTimeNs > startTimeNs) {
-                    if (band < traces.size()) {
-                        continue findFreeSpotInNextBand;
-                    } else {
-                        bandToUse = band + 1;
-                        break findFreeSpotInNextBand;
-                    }
+                    bandToUse++;
+                    continue findFreeSpotInNextBand;
                 }
             }
 
-            bandToUse = band;
             break;
-        }
+
+        } while (bandToUse < traces.size());
 
         traces.computeIfAbsent(bandToUse, key -> new LinkedList<>()).add(newTrace);
     }

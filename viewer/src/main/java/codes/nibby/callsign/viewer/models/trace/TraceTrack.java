@@ -13,8 +13,6 @@ public final class TraceTrack implements Comparable<TraceTrack> {
     private Long earliestEntryTimeNs = null;
     private Long latestEntryEndTimeNs = null;
 
-    private boolean needsProcessing = false;
-
     public TraceTrack(
         String binningAttributeName,
         String binningAttributeValue,
@@ -66,17 +64,9 @@ public final class TraceTrack implements Comparable<TraceTrack> {
         return latestEntryEndTimeNs;
     }
 
-    public boolean isNeedsProcessing() {
-        return needsProcessing;
-    }
-
-    public void setNeedsProcessing(boolean needsProcessing) {
-        this.needsProcessing = needsProcessing;
-    }
-
     @Override
     public int hashCode() {
-        return Objects.hash(binningAttributeName, displayAttributeName);
+        return Objects.hash(binningAttributeName, binningAttributeValue);
     }
 
     @Override
@@ -86,7 +76,7 @@ public final class TraceTrack implements Comparable<TraceTrack> {
         }
 
         return Objects.equals(binningAttributeName, other.binningAttributeName)
-            && Objects.equals(displayAttributeName, other.displayAttributeName);
+            && Objects.equals(binningAttributeValue, other.binningAttributeValue);
     }
 
     @Override
