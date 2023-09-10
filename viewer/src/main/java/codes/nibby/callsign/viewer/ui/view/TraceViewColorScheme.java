@@ -18,9 +18,10 @@ public interface TraceViewColorScheme {
     Color getIntervalTraceEventBackground();
     Color getIntervalTraceEventOutline();
 
-    Color getTimelineBaseForeground();
+    Color getTimelineBackground();
+    Color getTimelineBorderBackground();
+    Color getTimelineIndicatorLinesInContentForeground();
     Color getTimelineMajorTick();
     Color getTimelineMinorTick();
     Color getTimelineText();
-
 }

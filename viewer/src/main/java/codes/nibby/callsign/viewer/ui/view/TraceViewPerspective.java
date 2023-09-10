@@ -1,9 +1,9 @@
 package codes.nibby.callsign.viewer.ui.view;
 
-public interface TraceViewPerspective {
+import javax.annotation.Nullable;
+import java.text.DateFormat;
 
-    double MAX_ZOOM = 20; // 2000 %
-    double MIN_ZOOM = 0.1d;
+public interface TraceViewPerspective {
 
     double getGutterWidth();
 
@@ -61,4 +61,10 @@ public interface TraceViewPerspective {
     double getDisplayOffsetY();
 
     double getDisplayWidth(long timeDurationNs);
+
+    MajorTickIncrementDescriptor getTimelineMajorTickDescriptor();
+
+    record MajorTickIncrementDescriptor(long timeNs, @Nullable DateFormat dateFormat, @Nullable DateFormat timeFormat) {
+
+    }
 }

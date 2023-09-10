@@ -49,8 +49,8 @@ public final class TraceViewToolbar {
 
         zoomSpinner = new Spinner<>();
         zoomSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(
-            (int) (Math.round(TraceViewPerspective.MIN_ZOOM * 100)),
-            (int) (Math.round(TraceViewPerspective.MAX_ZOOM * 100)),
+            0,
+            1800,
             100, // Initial amount
             10   // Amount to step by
         ));

@@ -13,6 +13,7 @@ import javafx.scene.layout.Pane;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public final class TraceViewContentPane {
 
@@ -212,7 +213,7 @@ public final class TraceViewContentPane {
                 canvasHorizontalScroll.setMax(totalAmountScrollable);
                 canvasHorizontalScroll.setVisibleAmount(visibleAmount);
                 canvasHorizontalScroll.setUnitIncrement(totalAmountScrollable / 30d);
-                canvasHorizontalScroll.setBlockIncrement(totalAmountScrollable / 100d);
+                canvasHorizontalScroll.setBlockIncrement(Math.max(TimeUnit.SECONDS.toNanos(1), totalAmountScrollable / 100d));
             }
         }
 

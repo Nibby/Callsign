@@ -70,9 +70,11 @@ public final class TraceViewLightColorScheme implements TraceViewColorScheme {
         return INTERVAL_TRACE_EVENT_OUTLINE;
     }
 
+    private static final Color TIMELINE_INDICATOR_LINES_IN_CONTENT_FOREGROUND = Color.color(0.92d, 0.92d, 0.92d, 1d);
+
     @Override
-    public Color getTimelineBaseForeground() {
-        return Color.LIGHTGRAY;
+    public Color getTimelineIndicatorLinesInContentForeground() {
+        return TIMELINE_INDICATOR_LINES_IN_CONTENT_FOREGROUND;
     }
 
     @Override
@@ -88,6 +90,18 @@ public final class TraceViewLightColorScheme implements TraceViewColorScheme {
     @Override
     public Color getTimelineText() {
         return Color.DARKGRAY;
+    }
+
+    private static final Color TIMELINE_BACKGROUND = new Color(0.95d, 0.95d, 0.95d, 1d);
+
+    @Override
+    public Color getTimelineBackground() {
+        return TIMELINE_BACKGROUND;
+    }
+
+    @Override
+    public Color getTimelineBorderBackground() {
+        return Color.LIGHTGRAY;
     }
 
 }
