@@ -5,14 +5,12 @@ import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-
-final class TraceViewTraceContentManager {
+final class TraceViewTraceContentGenerator {
 
     @Nullable
     private TraceContent traceContent = null;
 
-    public TraceViewTraceContentManager() {
+    public TraceViewTraceContentGenerator() {
     }
 
     public TraceContent computeContent(

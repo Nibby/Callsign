@@ -23,23 +23,18 @@ public final class TraceViewContentPane {
     private final TraceViewToolbar toolbar;
 
     private final TraceViewPerspectiveManager perspective;
-    private final TraceViewTraceContentManager contentManager;
-    private final TraceViewColorScheme colorScheme;
-    private final TraceFilters traceFilters;
+    private final TraceViewTraceContentGenerator contentGenerator;
+    private final TraceViewDisplayOptions displayOptions;
 
     private final TraceViewCanvas canvas;
     private final ScrollBar canvasHorizontalScroll;
     private final ScrollBar canvasVerticalScroll;
 
-    private String binningAttribute = null;
-    private boolean showInstantEvents = true;
-    private boolean showIntervalEvents = true;
-
     public TraceViewContentPane() {
         rootPane = new BorderPane();
 
         toolbar = new TraceViewToolbar();
-        toolbar.setBinningAttributeChangeCallback(this::handleBinningAttributeChanged);
+        toolbar.setBinningAttributeChangeCallback(this::handleBinningAttributeNameChanged);
         toolbar.setToggleShowInstantEventsCallback(this::handleShowInstantEventSettingChanged);
         toolbar.setToggleShowIntervalEventsCallback(this::handleShowIntervalEventSettingChanged);
         toolbar.setZoomLevelChangeCallback(this::handleHorizontalZoomLevelChanged);
@@ -49,9 +44,8 @@ public final class TraceViewContentPane {
         contentPane = new BorderPane();
         rootPane.setCenter(contentPane);
 
-        traceFilters = new TraceFilters();
-        colorScheme = new TraceViewLightColorScheme();
-        contentManager = new TraceViewTraceContentManager();
+        displayOptions = new TraceViewDisplayOptions();
+        contentGenerator = new TraceViewTraceContentGenerator();
         perspective = new TraceViewPerspectiveManager();
 
         canvas = new TraceViewCanvas();
@@ -97,25 +91,24 @@ public final class TraceViewContentPane {
     }
 
     private void handleShowIntervalEventSettingChanged(boolean show) {
-        if (showIntervalEvents != show) {
-            showIntervalEvents = show;
+        if (displayOptions.isShowIntervalTraces() != show) {
+            displayOptions.setShowIntervalTraces(show);
             refreshContent();
         }
     }
 
     private void handleShowInstantEventSettingChanged(boolean show) {
-        if (showInstantEvents != show) {
-            showInstantEvents = show;
+        if (displayOptions.isShowInstantTraces() != show) {
+            displayOptions.setShowInstantTraces(show);
             refreshContent();
         }
     }
 
-    private void handleBinningAttributeChanged(String newBinningAttribute) {
-        if (!Objects.equals(this.binningAttribute, newBinningAttribute)) {
-            this.binningAttribute = newBinningAttribute;
+    private void handleBinningAttributeNameChanged(String newBinningAttributeName) {
+        if (!Objects.equals(displayOptions.getBinningAttributeName(), newBinningAttributeName)) {
+            displayOptions.setBinningAttributeName(newBinningAttributeName);
+            refreshContent();
         }
-
-        refreshContent();
     }
 
     private void handleHorizontalZoomLevelChanged(double newZoomLevel) {
@@ -167,16 +160,19 @@ public final class TraceViewContentPane {
 
         @Nullable TraceContent traces;
 
-        if (binningAttribute != null) {
+        String binningAttributeName = displayOptions.getBinningAttributeName();
+
+        if (binningAttributeName != null) {
             if (viewportChanged) {
                 long displayedEarliestTimeNs = perspective.getDisplayedEarliestEventTimeNs();
                 long displayedLatestTimeNs = perspective.getDisplayedLatestEventTimeNs();
 
-                traceFilters.setDisplayedTimeInterval(displayedEarliestTimeNs, displayedLatestTimeNs);
+                TraceFilters filters = displayOptions.getFilters();
+                filters.setDisplayedTimeInterval(displayedEarliestTimeNs, displayedLatestTimeNs);
 
-                traces = contentManager.computeContent(document, binningAttribute, traceFilters);
+                traces = contentGenerator.computeContent(document, binningAttributeName, filters);
             } else {
-                traces = Objects.requireNonNull(contentManager.getLastComputedContent(), "no last computed content");
+                traces = Objects.requireNonNull(contentGenerator.getLastComputedContent(), "no last computed content");
             }
 
             updateScrollbars(traces);
@@ -184,7 +180,7 @@ public final class TraceViewContentPane {
             traces = null;
         }
 
-        canvas.paint(perspective, traces, colorScheme);
+        canvas.paint(perspective, traces, displayOptions);
     }
 
     private void updateScrollbars(TraceContent traces) {

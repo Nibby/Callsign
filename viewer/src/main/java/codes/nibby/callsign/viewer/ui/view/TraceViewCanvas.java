@@ -26,12 +26,12 @@ final class TraceViewCanvas extends Canvas {
         this.graphics = getGraphicsContext2D();
     }
 
-    public void paint(TraceViewPerspective perspective, @Nullable TraceContent traces, TraceViewColorScheme colorScheme) {
-        paintBackground(colorScheme);
+    public void paint(TraceViewPerspective perspective, @Nullable TraceContent traces, TraceViewDisplayOptions displayOptions) {
+        paintBackground(displayOptions.getColorScheme());
 
         if (traces != null) {
-            paintContent(perspective, traces, colorScheme);
-            paintGutter(perspective, traces, colorScheme);
+            paintContent(perspective, traces, displayOptions);
+            paintGutter(perspective, traces, displayOptions);
         }
     }
 
@@ -40,7 +40,7 @@ final class TraceViewCanvas extends Canvas {
         graphics.fillRect(0, 0, getWidth(), getHeight());
     }
 
-    private void paintContent(TraceViewPerspective perspective, TraceContent traces, TraceViewColorScheme colorScheme) {
+    private void paintContent(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceContent.DisplayData displayData = traces.getDisplayData();
         Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
         int rowIndex = 0;
@@ -69,7 +69,7 @@ final class TraceViewCanvas extends Canvas {
             }
 
             List<Trace> bandTraces = trackData.getTraces(cumulativeBandIndex - trackDisplayData.get().cumulativeBandDisplayIndexStart());
-            paintTraceBand(perspective, rowIndex, track, bandTraces, colorScheme, yStart);
+            paintTraceBand(perspective, rowIndex, track, bandTraces, displayOptions, yStart);
 
             yStart += perspective.getTrackBandHeight();
         }
@@ -80,9 +80,10 @@ final class TraceViewCanvas extends Canvas {
         int rowIndex,
         TraceTrack track,
         List<Trace> bandTraces,
-        TraceViewColorScheme colorScheme,
+        TraceViewDisplayOptions displayOptions,
         double yStart
     ) {
+        TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
         double bandHeight = perspective.getTrackBandHeight();
 
         graphics.setFill(rowIndex % 2 == 0 ? colorScheme.getContentRowBackground() : colorScheme.getContentAlternateRowBackground());
@@ -90,8 +91,12 @@ final class TraceViewCanvas extends Canvas {
 
         List<InstantTrace> instantTraces = new ArrayList<>();
 
+        if (!displayOptions.isShowInstantTraces() && !displayOptions.isShowIntervalTraces()) {
+            return;
+        }
+
         for (Trace trace : bandTraces) {
-            if (trace instanceof IntervalTrace intervalTrace) {
+            if (displayOptions.isShowIntervalTraces() && trace instanceof IntervalTrace intervalTrace) {
                 double xStart = perspective.getDisplayX(intervalTrace.getStartTimeNs());
                 double width = perspective.getDisplayWidth((intervalTrace.getEndTimeNs() - intervalTrace.getStartTimeNs()));
 
@@ -101,24 +106,28 @@ final class TraceViewCanvas extends Canvas {
                 graphics.setStroke(colorScheme.getIntervalTraceEventOutline());
                 graphics.strokeRect(xStart, yStart + 6, width, bandHeight - 12);
 
-            } else if (trace instanceof InstantTrace instantTrace) {
+            } else if (displayOptions.isShowInstantTraces() && trace instanceof InstantTrace instantTrace) {
                 instantTraces.add(instantTrace);
             }
         }
 
-        for (InstantTrace instantTrace : instantTraces) {
-            double xStart = perspective.getDisplayX(instantTrace.getTimeNs());
-            double size = bandHeight - 18;
+        if (displayOptions.isShowInstantTraces()) {
+            for (InstantTrace instantTrace : instantTraces) {
+                double xStart = perspective.getDisplayX(instantTrace.getTimeNs());
+                double size = bandHeight - 18;
 
-            graphics.setFill(colorScheme.getInstantTraceEventBackground());
-            graphics.fillOval(xStart - size / 2, yStart + bandHeight / 2 - size / 2, size, size);
+                graphics.setFill(colorScheme.getInstantTraceEventBackground());
+                graphics.fillOval(xStart - size / 2, yStart + bandHeight / 2 - size / 2, size, size);
 
-            graphics.setStroke(colorScheme.getInstantTraceEventOutline());
-            graphics.strokeOval(xStart - size / 2, yStart + bandHeight / 2 - size / 2, size, size);
+                graphics.setStroke(colorScheme.getInstantTraceEventOutline());
+                graphics.strokeOval(xStart - size / 2, yStart + bandHeight / 2 - size / 2, size, size);
+            }
         }
     }
 
-    private void paintGutter(TraceViewPerspective perspective, TraceContent traces, TraceViewColorScheme colorScheme) {
+    private void paintGutter(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+        TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
+
         graphics.setFill(colorScheme.getGutterBackground());
         graphics.fillRect(0, 0, perspective.getGutterWidth(), getHeight());
 

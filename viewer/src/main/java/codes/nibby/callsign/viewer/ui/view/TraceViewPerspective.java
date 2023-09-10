@@ -24,7 +24,7 @@ public interface TraceViewPerspective {
     double getViewportHeight();
 
     /**
-     * The real height of a track is computed dynamically by {@link TraceViewTraceContentManager} and its related
+     * The real height of a track is computed dynamically by {@link TraceViewTraceContentGenerator} and its related
      * classes depending on the number of overlapping interval traces.
      * <p/>
      * Method of this method is the bare minimum height a track must occupy.
