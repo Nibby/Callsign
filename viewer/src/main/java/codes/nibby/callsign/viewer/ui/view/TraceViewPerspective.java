@@ -60,7 +60,5 @@ public interface TraceViewPerspective {
 
     double getDisplayOffsetY();
 
-    long getDisplayOffsetTimeNs();
-
     double getDisplayWidth(long timeDurationNs);
 }

@@ -31,7 +31,7 @@ public final class TraceViewToolbar {
     private Consumer<Boolean> toggleShowIntervalEventsCallback;
 
     @Nullable
-    private Consumer<Double> zoomLevelChangeCallback;
+    private Consumer<HorizontalZoom> zoomLevelChangeCallback;
 
 
     TraceViewToolbar() {
@@ -59,7 +59,7 @@ public final class TraceViewToolbar {
         zoomSpinner.valueProperty().addListener(event -> {
             if (zoomLevelChangeCallback != null) {
                 double zoomLevel = zoomSpinner.getValue() / 100d;
-                zoomLevelChangeCallback.accept(zoomLevel);
+                zoomLevelChangeCallback.accept(HorizontalZoom.of(zoomLevel));
             }
         });
 
@@ -107,8 +107,8 @@ public final class TraceViewToolbar {
         return toolbar;
     }
 
-    void notifyZoomLevelChanged(double zoom) {
-        int displayedZoomLevel = (int) (Math.round(zoom * 100));
+    void notifyZoomLevelChanged(HorizontalZoom zoom) {
+        int displayedZoomLevel = (int) (Math.round(zoom.value * 100));
         zoomSpinner.getValueFactory().setValue(displayedZoomLevel);
     }
 
@@ -134,7 +134,7 @@ public final class TraceViewToolbar {
         this.toggleShowIntervalEventsCallback = toggleShowIntervalEventsCallback;
     }
 
-    public void setZoomLevelChangeCallback(@Nullable Consumer<Double> zoomLevelChangeCallback) {
+    public void setZoomLevelChangeCallback(@Nullable Consumer<HorizontalZoom> zoomLevelChangeCallback) {
         this.zoomLevelChangeCallback = zoomLevelChangeCallback;
     }
 }

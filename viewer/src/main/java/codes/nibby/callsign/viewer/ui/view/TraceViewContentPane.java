@@ -4,6 +4,7 @@ import codes.nibby.callsign.viewer.models.document.TraceDocument;
 import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import codes.nibby.callsign.viewer.ui.CanvasContainer;
+import com.google.common.base.Preconditions;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.ScrollEvent;
@@ -111,9 +112,11 @@ public final class TraceViewContentPane {
         }
     }
 
-    private void handleHorizontalZoomLevelChanged(double newZoomLevel) {
-        if (Math.abs(perspective.getTrackHorizontalZoomLevel() - newZoomLevel) > 0.0001d) {
-            perspective.setHorizontalZoom(newZoomLevel);
+    private void handleHorizontalZoomLevelChanged(HorizontalZoom newZoomLevel) {
+        Preconditions.checkNotNull(newZoomLevel);
+
+        if (!Objects.equals(newZoomLevel, perspective.getTrackHorizontalZoom())) {
+            perspective.setZoom(newZoomLevel);
             refreshContent();
         }
     }
@@ -126,8 +129,6 @@ public final class TraceViewContentPane {
             }
         } else if (event.isAltDown()) {
             // Horizontal zoom in/out
-            double zoom = perspective.getTrackHorizontalZoomLevel();
-
             if (event.getTotalDeltaY() > 0) {
                 adjustZoom(0.5d);
             } else {
@@ -142,9 +143,11 @@ public final class TraceViewContentPane {
     }
 
     private void adjustZoom(double amount) {
-        double currentZoom = perspective.getTrackHorizontalZoomLevel();
-        perspective.setHorizontalZoom(currentZoom + amount);
-        toolbar.notifyZoomLevelChanged(currentZoom + amount);
+        HorizontalZoom currentZoom = perspective.getTrackHorizontalZoom();
+        HorizontalZoom newZoom = currentZoom.adjust(amount);
+
+        perspective.setZoom(newZoom);
+        toolbar.notifyZoomLevelChanged(newZoom);
 
         refreshContent();
     }

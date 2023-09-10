@@ -1,5 +1,7 @@
 package codes.nibby.callsign.viewer.ui.view;
 
+import java.util.Objects;
+
 final class TraceViewPerspectiveManager implements TraceViewPerspective {
 
     private static final int HEIGHT_RESERVED_FOR_TIMELINE_DISPLAY = 45;
@@ -15,16 +17,14 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     // Note: track height is computed dynamically by TraceViewContentManager (and its related classes) depending on
     //       the number of overlapping traces in a single track.
     private double displayOffsetY = 0d;
-    private double trackBandHeight = 30d;
+    private static final double TRACK_BAND_HEIGHT = 30d;
 
     // Horizontal display parameters
     private long earliestEventTimeNs;
     private long latestEventTimeNs;
-    private long totalTimeRangeNs;
 
-    private long displayStartTimeOffsetNs = 0;      // dictates horizontal scroll, leftmost edge of screen = earliestEventTimeNs + this
-    private long displayTimeRangeNs = 1;            // viewportWidth expressed in timeNs terms
-    private double trackHorizontalZoomLevel = 1d;
+    private long displayStartTimeOffsetNs = 0; // dictates horizontal scroll, leftmost edge of screen = earliestEventTimeNs + this value
+    private HorizontalZoom trackHorizontalZoom = HorizontalZoom.of(1d);
 
     private boolean firstCompute = true;
 
@@ -67,12 +67,8 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
             totalTimeRangeChanged = true;
         }
 
-        if (totalTimeRangeChanged) {
-            this.totalTimeRangeNs = Math.max(1, this.latestEventTimeNs - this.earliestEventTimeNs);
-        }
-
         if (firstCompute) {
-            setHorizontalZoom(1d);
+            setZoom(HorizontalZoom.of(1d));
             this.firstCompute = false;
         }
 
@@ -80,32 +76,26 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     }
 
     /**
-     * Sets the zoom factor for the time axis. The zoom level is normalized, where 1d = 100% zoom,
-     * which means the entire timeline fits within the viewport.
+     * Sets the zoom factor for the time axis. The zoom level is normalized, where 1d = 10_000 µs per pixel.
      *
-     * @param zoomLevel Zoom level ({@code 0 < zoomLevel < ?}
+     * @param zoom New zoom level
      */
-    public void setHorizontalZoom(double zoomLevel) {
-        this.trackHorizontalZoomLevel = Math.min(Math.max(zoomLevel, MIN_ZOOM), MAX_ZOOM);
-
-        double portionOfTimelineInView = 1d / trackHorizontalZoomLevel;
-        this.displayTimeRangeNs = (long) Math.ceil(totalTimeRangeNs * portionOfTimelineInView);
+    public void setZoom(HorizontalZoom zoom) {
+        this.trackHorizontalZoom = Objects.requireNonNull(zoom);
     }
 
     @Override
     public double getDisplayX(long timeNs) {
         long timeElapsedSinceDisplayStartTime = timeNs - (earliestEventTimeNs + displayStartTimeOffsetNs);
-        double portionOfViewableTimeRange = timeElapsedSinceDisplayStartTime / (double) displayTimeRangeNs;
+        double pixelsFromLeftEdge = trackHorizontalZoom.measurePixels(timeElapsedSinceDisplayStartTime);
 
-        return gutterWidth + portionOfViewableTimeRange * viewportWidth;
+        return gutterWidth + pixelsFromLeftEdge;
     }
 
     @Override
     public long getTimeNsFromDisplayX(double displayX) {
-        double portionOfViewport = Math.max((displayX - gutterWidth) / viewportWidth, 0);
-        long portionOfDisplayTimeRange = Math.round(portionOfViewport * displayTimeRangeNs);
-
-        return earliestEventTimeNs + portionOfDisplayTimeRange;
+        long timeNsSinceDisplayStartTime = Math.round(trackHorizontalZoom.measureTimeNs(displayX));
+        return earliestEventTimeNs + displayStartTimeOffsetNs + timeNsSinceDisplayStartTime;
     }
 
     /**
@@ -155,13 +145,13 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     /**
      * @return Horizontal track zoom factor
      */
-    public double getTrackHorizontalZoomLevel() {
-        return trackHorizontalZoomLevel;
+    public HorizontalZoom getTrackHorizontalZoom() {
+        return trackHorizontalZoom;
     }
 
     @Override
     public double getTrackBandHeight() {
-        return trackBandHeight;
+        return TRACK_BAND_HEIGHT;
     }
 
     @Override
@@ -182,12 +172,7 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     }
 
     @Override
-    public long getDisplayOffsetTimeNs() {
-        return displayStartTimeOffsetNs;
-    }
-
-    @Override
     public double getDisplayWidth(long timeDurationNs) {
-        return ((double) timeDurationNs / displayTimeRangeNs) * viewportWidth;
+        return trackHorizontalZoom.measurePixels(timeDurationNs);
     }
 }
