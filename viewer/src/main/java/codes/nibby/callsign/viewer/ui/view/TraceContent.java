@@ -59,6 +59,7 @@ final class TraceContent {
         }
 
         int cumulativeBandIndex = 0;
+        int displayIndex = 0;
 
         for (TraceTrack track : displayData.trackDisplayOrder) {
             TrackData trackData = this.trackData.get(track);
@@ -70,11 +71,14 @@ final class TraceContent {
                 var trackDisplayData = new DisplayData.TrackDisplayData(
                     cumulativeBandIndexStart,
                     cumulativeBandIndexEnd,
-                    track
+                    track,
+                    displayIndex
                 );
 
                 displayData.trackLookupByCumulativeBandIndex.put(cumulativeBandIndex, trackDisplayData);
             }
+
+            displayIndex++;
         }
     }
 
@@ -106,7 +110,8 @@ final class TraceContent {
         public record TrackDisplayData(
             int cumulativeBandDisplayIndexStart,
             int cumulativeBandDisplayIndexEnd,
-            TraceTrack track
+            TraceTrack track,
+            int trackDisplayIndex
         ) {}
 
         public Optional<TrackDisplayData> getTrackDataFromCumulativeBandIndex(int cumulativeBandIndex) {
