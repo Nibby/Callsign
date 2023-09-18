@@ -42,12 +42,12 @@ final class TraceContent {
         track.notifyTraceAdded(trace);
 
         earliestTraceEventStartNs = (earliestTraceEventStartNs == null)
-            ? track.getEarliestEntryTimeNs()
-            : Math.min(earliestTraceEventStartNs, track.getEarliestEntryTimeNs());
+            ? track.getEarliestEntryTimeMs()
+            : Math.min(earliestTraceEventStartNs, track.getEarliestEntryTimeMs());
 
         latestTraceEventEndNs = (latestTraceEventEndNs == null)
-            ? track.getLatestEntryEndTimeNs()
-            : Math.max(latestTraceEventEndNs, track.getLatestEntryEndTimeNs());
+            ? track.getLatestEntryEndTimeMs()
+            : Math.max(latestTraceEventEndNs, track.getLatestEntryEndTimeMs());
 
         displayData = null;
     }

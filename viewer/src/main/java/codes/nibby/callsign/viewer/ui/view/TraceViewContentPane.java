@@ -79,7 +79,7 @@ public final class TraceViewContentPane {
         canvasHorizontalScroll.setValue(0);
         canvasHorizontalScroll.setDisable(true);
         canvasHorizontalScroll.valueProperty().addListener(event -> {
-            perspective.setDisplayOffsetTimeNs((long) canvasHorizontalScroll.getValue());
+            perspective.setDisplayOffsetTimeMs((long) canvasHorizontalScroll.getValue());
             refreshContent();
         });
         BorderPane horizontalScrollPane = new BorderPane();
@@ -157,10 +157,10 @@ public final class TraceViewContentPane {
         double totalWidth = contentPane.getWidth() - canvasVerticalScroll.getWidth();
         double totalHeight = contentPane.getHeight() - canvasHorizontalScroll.getHeight();
 
-        long earliestEventTimeNs = document.getEarliestEventStartTimeNs();
-        long latestEventTimeNs = document.getLatestEventEndTimeNs();
+        long earliestEventTimeMs = document.getEarliestEventStartTimeMs();
+        long latestEventTimeMs = document.getLatestEventEndTimeMs();
 
-        boolean viewportChanged = perspective.applyProperties(totalWidth, totalHeight, earliestEventTimeNs, latestEventTimeNs);
+        boolean viewportChanged = perspective.applyProperties(totalWidth, totalHeight, earliestEventTimeMs, latestEventTimeMs);
 
         @Nullable TraceContent traces;
 
@@ -168,11 +168,11 @@ public final class TraceViewContentPane {
 
         if (binningAttributeName != null) {
             if (viewportChanged) {
-                long displayedEarliestTimeNs = perspective.getDisplayedEarliestEventTimeNs();
-                long displayedLatestTimeNs = perspective.getDisplayedLatestEventTimeNs();
+                long displayedEarliestTimeMs = perspective.getDisplayedEarliestEventTimeMs();
+                long displayedLatestTimeMs = perspective.getDisplayedLatestEventTimeMs();
 
                 TraceFilters filters = displayOptions.getFilters();
-                filters.setDisplayedTimeInterval(displayedEarliestTimeNs, displayedLatestTimeNs);
+                filters.setDisplayedTimeInterval(displayedEarliestTimeMs, displayedLatestTimeMs);
 
                 traces = contentGenerator.computeContent(document, binningAttributeName, filters);
             } else {
@@ -193,16 +193,16 @@ public final class TraceViewContentPane {
     }
 
     private void updateHorizontalScrollbar(TraceContent traces) {
-        Long earliestTimeNs = traces.getEarliestTraceEventStartNs();
-        Long latestTimeNs = traces.getLatestTraceEventEndNs();
+        Long earliestTimeMs = traces.getEarliestTraceEventStartNs();
+        Long latestTimeMs = traces.getLatestTraceEventEndNs();
 
         boolean canScroll;
 
-        if (earliestTimeNs == null || latestTimeNs == null) {
+        if (earliestTimeMs == null || latestTimeMs == null) {
             canScroll = false;
         } else {
-            long totalTimeIntervalNs = latestTimeNs - earliestTimeNs;
-            long displayedTimeIntervalNs = perspective.getDisplayedLatestEventTimeNs() - perspective.getDisplayedEarliestEventTimeNs();
+            long totalTimeIntervalNs = latestTimeMs - earliestTimeMs;
+            long displayedTimeIntervalNs = perspective.getDisplayedLatestEventTimeMs() - perspective.getDisplayedEarliestEventTimeMs();
 
             canScroll = totalTimeIntervalNs - displayedTimeIntervalNs > 0;
 
@@ -213,7 +213,7 @@ public final class TraceViewContentPane {
                 canvasHorizontalScroll.setMax(totalAmountScrollable);
                 canvasHorizontalScroll.setVisibleAmount(visibleAmount);
                 canvasHorizontalScroll.setUnitIncrement(totalAmountScrollable / 30d);
-                canvasHorizontalScroll.setBlockIncrement(Math.max(TimeUnit.SECONDS.toNanos(1), totalAmountScrollable / 100d));
+                canvasHorizontalScroll.setBlockIncrement(Math.max(TimeUnit.SECONDS.toMillis(1), totalAmountScrollable / 100d));
             }
         }
 

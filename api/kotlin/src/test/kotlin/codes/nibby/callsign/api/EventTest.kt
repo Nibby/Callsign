@@ -2,6 +2,7 @@ package codes.nibby.callsign.api
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class EventTest {
 
@@ -164,6 +165,6 @@ class EventTest {
         Assertions.assertEquals(value, retrievedValue)
     }
 
-    private class TestEvent(name: String, timeNs: Long? = null)
-        : Event(null, null, "test", name, timeNs ?: System.nanoTime())
+    private class TestEvent(name: String, timeMs: Long? = null)
+        : Event(null, null, "test", name, timeMs ?: Instant.now().toEpochMilli())
 }

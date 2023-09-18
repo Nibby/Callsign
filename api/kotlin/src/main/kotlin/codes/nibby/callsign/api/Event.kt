@@ -7,7 +7,7 @@ import kotlin.collections.HashMap
 
 /**
  * Represents a notable occurrence during the execution of a program. At its core, an event consists
- * of a set of attributes, the approximate occurrence time in nanoseconds, and an internal unique
+ * of a set of attributes, the approximate occurrence time in milliseconds, and an internal unique
  * type code to distinguish one type of event from another.
  *
  * Event attributes are any metadata that is associated with the event. This should be used to record
@@ -31,14 +31,14 @@ import kotlin.collections.HashMap
  *
  * @param type Internal type code for this family of event. Must be unique among all families
  * @param name Name of this event, stored as a special attribute accessible from [getAttribute]
- * @param timeNs The approximate time (in nanoseconds) this event occurred on
+ * @param timeMs The approximate time (in milliseconds) this event occurred on
  *
  * @see InstantEvent
  * @see IntervalStartEvent
  * @see IntervalEndEvent
  * @see TimelineLogger
  */
-abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: String, name: String, val timeNs: Long) {
+abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: String, name: String, val timeMs: Long) {
 
     /**
      * A unique identifier for this event. May be referenced by other events [correlationId].

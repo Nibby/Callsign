@@ -3,7 +3,6 @@ package codes.nibby.callsign.api.formats
 import codes.nibby.callsign.api.*
 import codes.nibby.callsign.api.AttributeData
 import de.siegmar.fastcsv.reader.CsvReader
-import de.siegmar.fastcsv.reader.CsvRow
 import de.siegmar.fastcsv.writer.CsvWriter
 import kotlinx.serialization.json.Json
 import java.io.Reader
@@ -38,7 +37,7 @@ class CsvFormat {
                 event.correlationId?.toString() ?: "",
                 event.type,
                 event.name,
-                event.timeNs.toString(),
+                event.timeMs.toString(),
                 attributeData
             )
         }
@@ -56,17 +55,17 @@ class CsvFormat {
             val correlationIdString = fields[index++]
             val eventType = fields[index++]
             val name = fields[index++]
-            val timeNs = fields[index++].toLong()
+            val timeMs = fields[index++].toLong()
             val attributeDataRaw = fields[index]
 
             val correlationId: UUID? = if (correlationIdString.isBlank()) null else UUID.fromString(correlationIdString)
 
             val event: Event = if (IntervalStartEvent.TYPE == eventType) {
-                IntervalStartEvent(eventId, name, timeNs)
+                IntervalStartEvent(eventId, name, timeMs)
             } else if (IntervalEndEvent.TYPE == eventType) {
-                IntervalEndEvent(eventId, correlationId!!, name, timeNs)
+                IntervalEndEvent(eventId, correlationId!!, name, timeMs)
             } else if (InstantEvent.TYPE == eventType) {
-                InstantEvent(eventId, name, timeNs)
+                InstantEvent(eventId, name, timeMs)
             } else {
                 return null
             }

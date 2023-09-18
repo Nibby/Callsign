@@ -5,6 +5,7 @@ import codes.nibby.callsign.api.sinks.CsvFileSink;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public final class TestDataGenerator {
 
             int intervals = (int) (Math.random() * 10);
             for (int ii = 0; ii < intervals; ii++) {
-                Result result1 = generateIntervalEventPair(TimeUnit.SECONDS.toNanos((int) (Math.random() * 5)));
+                Result result1 = generateIntervalEventPair(TimeUnit.SECONDS.toMillis((int) (Math.random() * 5)));
                 result1.generatedEvents.get(0).putAttribute("index", String.valueOf(i));
                 result1.generatedEvents.get(1).putAttribute("index", String.valueOf(i));
                 result = result.combine(result1);
@@ -41,7 +42,7 @@ public final class TestDataGenerator {
     }
 
     public static Result generateSingleInstantEvent() {
-        var event = new InstantEvent("TestInstantEvent", System.nanoTime());
+        var event = new InstantEvent("TestInstantEvent", Instant.now().toEpochMilli());
 
         generateDeterministicAttributes(event);
 
@@ -49,7 +50,7 @@ public final class TestDataGenerator {
     }
 
     public static Result generateSingleIntervalStartEvent() {
-        var event = new IntervalStartEvent("TestIntervalStartEvent", System.nanoTime());
+        var event = new IntervalStartEvent("TestIntervalStartEvent", Instant.now().toEpochMilli());
 
         generateDeterministicAttributes(event);
 
@@ -57,7 +58,7 @@ public final class TestDataGenerator {
     }
 
     public static Result generateSingleIntervalEndEvent() {
-        var event = new IntervalEndEvent(UUID.randomUUID(), "TestIntervalEndEvent", System.nanoTime());
+        var event = new IntervalEndEvent(UUID.randomUUID(), "TestIntervalEndEvent", Instant.now().toEpochMilli());
 
         generateDeterministicAttributes(event);
 
@@ -69,16 +70,16 @@ public final class TestDataGenerator {
     }
 
     public static Result generateIntervalEventPair(@Nullable Long durationNs) {
-        long realDuration;
+        long realDurationMs;
 
         if (durationNs == null) {
-            realDuration = TimeUnit.MILLISECONDS.toNanos((int) (Math.random() * 4000) + 500);
+            realDurationMs = (int) (Math.random() * 4000) + 500;
         } else {
-            realDuration = durationNs;
+            realDurationMs = durationNs;
         }
 
-        var startEvent = new IntervalStartEvent("TestIntervalEventPair", System.nanoTime() - realDuration);
-        var endEvent = new IntervalEndEvent(startEvent.getId(), startEvent.getName(), System.nanoTime());
+        var startEvent = new IntervalStartEvent("TestIntervalEventPair", Instant.now().toEpochMilli() - realDurationMs);
+        var endEvent = new IntervalEndEvent(startEvent.getId(), startEvent.getName(), Instant.now().toEpochMilli());
 
         generateDeterministicAttributes(startEvent);
         generateDeterministicAttributes(endEvent);

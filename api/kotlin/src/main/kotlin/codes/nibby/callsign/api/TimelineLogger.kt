@@ -53,12 +53,12 @@ class TimelineLogger(private val sink: TimelineLogSink) {
      * throw [IllegalStateException].
      *
      * @param startEvent A previously recorded interval start event to complete
-     * @param endTimeNs Approximate time (in nanoseconds) the interval event ended on
+     * @param endTimeMs Approximate time (in milliseconds) the interval event ended on
      *
      * @throws IllegalArgumentException If [startEvent] has not been recorded as started, or this
      *                                  method is called twice for the same event.
      */
-    fun recordEventEnd(startEvent: IntervalStartEvent, endTimeNs: Long) {
+    fun recordEventEnd(startEvent: IntervalStartEvent, endTimeMs: Long) {
         val endEvent: IntervalEndEvent
 
         synchronized(startEvent.lock) {
@@ -71,7 +71,7 @@ class TimelineLogger(private val sink: TimelineLogSink) {
 
             startEvent.published = true
 
-            endEvent = IntervalEndEvent(null, startEvent.id, startEvent.name, endTimeNs)
+            endEvent = IntervalEndEvent(null, startEvent.id, startEvent.name, endTimeMs)
             endEvent.loadAttributeData(startEvent.getAttributeData(), includeSpecialAttributes = false)
         }
 

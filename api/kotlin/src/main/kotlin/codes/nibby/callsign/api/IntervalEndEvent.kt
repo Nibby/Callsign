@@ -26,7 +26,7 @@ import java.util.UUID
  *    type and modify its attributes. The name of this event is also copied from the start event.
  *
  * @param name Name of this event
- * @param timeNs Approximate time (in nanoseconds) this event happened on
+ * @param timeMs Approximate time (in milliseconds) this event happened on
  * @param correlationId The [IntervalStartEvent.id] this interval end event complements
  *
  * @see IntervalStartEvent
@@ -38,13 +38,13 @@ class IntervalEndEvent internal constructor(
     existingId: UUID?,
     correlationId: UUID,
     name: String,
-    timeNs: Long
-) : Event(existingId, correlationId, TYPE, name, timeNs) {
+    timeMs: Long
+) : Event(existingId, correlationId, TYPE, name, timeMs) {
 
     companion object {
         const val TYPE = "t-e"
     }
 
-    internal constructor(correlationId: UUID, name: String, timeNs: Long) : this(null, correlationId, name, timeNs)
+    internal constructor(correlationId: UUID, name: String, timeMs: Long) : this(null, correlationId, name, timeMs)
 
 }

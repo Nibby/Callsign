@@ -2,13 +2,14 @@ package codes.nibby.callsign.api
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class TimelineLoggerTest {
 
     @Test
     fun testRecordEventStart_setsEventRecordedFlag() {
         val timeline = TimelineLogger(TestSink())
-        val event = IntervalStartEvent("timed event 1", System.nanoTime())
+        val event = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
 
         timeline.recordEventStart(event)
 
@@ -18,7 +19,7 @@ class TimelineLoggerTest {
     @Test
     fun testRecordEventStart_invokeTwiceOnSameEvent_throwsIllegalStateException() {
         val timeline = TimelineLogger(TestSink())
-        val event = IntervalStartEvent("timed event 1", System.nanoTime())
+        val event = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
 
         timeline.recordEventStart(event)
 
@@ -31,7 +32,7 @@ class TimelineLoggerTest {
     fun testRecordEventStart_invokesSinkWriterMethod() {
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
-        val event = IntervalStartEvent("timed event 1", System.nanoTime())
+        val event = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
 
         timeline.recordEventStart(event)
 
@@ -41,10 +42,10 @@ class TimelineLoggerTest {
     @Test
     fun testRecordEventEnd_endTimeSet() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        val timedEvent = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
         timeline.recordEventStart(timedEvent)
 
-        timeline.recordEventEnd(timedEvent, System.nanoTime())
+        timeline.recordEventEnd(timedEvent, Instant.now().toEpochMilli())
 
         assertNotNull(timedEvent)
     }
@@ -52,25 +53,25 @@ class TimelineLoggerTest {
     @Test
     fun testRecordEventEnd_invokedTwiceOnSameEvent_failsWithIllegalStateException() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        val timedEvent = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
         timeline.recordEventStart(timedEvent)
 
         assertDoesNotThrow {
-            timeline.recordEventEnd(timedEvent, System.nanoTime())
+            timeline.recordEventEnd(timedEvent, Instant.now().toEpochMilli())
         }
 
         assertThrows(IllegalStateException::class.java) {
-            timeline.recordEventEnd(timedEvent, System.nanoTime())
+            timeline.recordEventEnd(timedEvent, Instant.now().toEpochMilli())
         }
     }
 
     @Test
     fun testRecordEventEnd_marksEventAsSaved() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        val timedEvent = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
         timeline.recordEventStart(timedEvent)
 
-        timeline.recordEventEnd(timedEvent, System.nanoTime())
+        timeline.recordEventEnd(timedEvent, Instant.now().toEpochMilli())
 
         assertTrue(timedEvent.published)
     }
@@ -78,10 +79,10 @@ class TimelineLoggerTest {
     @Test
     fun testRecordEventEnd_eventStartNotRecorded_failsWithIllegalStateException() {
         val timeline = TimelineLogger(TestSink())
-        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        val timedEvent = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
 
         org.junit.jupiter.api.assertThrows<IllegalStateException> {
-            timeline.recordEventEnd(timedEvent, System.nanoTime())
+            timeline.recordEventEnd(timedEvent, Instant.now().toEpochMilli())
         }
     }
 
@@ -89,7 +90,7 @@ class TimelineLoggerTest {
     fun testRecordEventEnd_copiesAttributesFromIntervalStartEvent() {
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
-        val timedEvent = IntervalStartEvent("timed event 1", System.nanoTime())
+        val timedEvent = IntervalStartEvent("timed event 1", Instant.now().toEpochMilli())
         timedEvent.putAttribute("a1", "v1")
         timedEvent.putAttribute("a2", "v2")
 
@@ -98,7 +99,7 @@ class TimelineLoggerTest {
         timedEvent.putAttribute("a3", "v3")
         timedEvent.putAttribute("a1", "modified")
 
-        timeline.recordEventEnd(timedEvent, System.nanoTime())
+        timeline.recordEventEnd(timedEvent, Instant.now().toEpochMilli())
 
         assertEquals(1, sink.writeEventEndCalled.size)
 
@@ -109,7 +110,7 @@ class TimelineLoggerTest {
 
     @Test
     fun testRecordEvent_marksEventAsSaved() {
-        val event = InstantEvent("myEvent", System.nanoTime())
+        val event = InstantEvent("myEvent", Instant.now().toEpochMilli())
         val timeline = TimelineLogger(TestSink())
 
         timeline.recordEvent(event)
@@ -119,7 +120,7 @@ class TimelineLoggerTest {
 
     @Test
     fun testRecordEvent_invokesSinkWriterMethod() {
-        val event = InstantEvent("myEvent", System.nanoTime())
+        val event = InstantEvent("myEvent", Instant.now().toEpochMilli())
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
 
@@ -130,7 +131,7 @@ class TimelineLoggerTest {
 
     @Test
     fun testRecordEvent_methodCalledTwiceForSameEvent_fails() {
-        val event = InstantEvent("myEvent", System.nanoTime())
+        val event = InstantEvent("myEvent", Instant.now().toEpochMilli())
         val sink = TestSink()
         val timeline = TimelineLogger(sink)
 

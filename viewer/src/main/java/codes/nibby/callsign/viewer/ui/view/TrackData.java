@@ -21,8 +21,8 @@ final class TrackData {
     }
 
     private void addIntervalTrace(IntervalTrace newTrace) {
-        long startTimeNs = newTrace.getStartTimeNs();
-        long endTimeNs = newTrace.getEndTimeNs();
+        long startTimeMs = newTrace.getStartTimeMs();
+        long endTimeMs = newTrace.getEndTimeMs();
 
         // Interval traces only
         int bandToUse = 0;
@@ -37,10 +37,10 @@ final class TrackData {
                     continue;
                 }
 
-                long otherStartTimeNs = intervalTrace.getStartTimeNs();
-                long otherEndTimeNs = intervalTrace.getEndTimeNs();
+                long otherStartTimeMs = intervalTrace.getStartTimeMs();
+                long otherEndTimeMs = intervalTrace.getEndTimeMs();
 
-                if (otherStartTimeNs >= startTimeNs && otherStartTimeNs <= endTimeNs || otherEndTimeNs > startTimeNs) {
+                if (otherStartTimeMs >= startTimeMs && otherStartTimeMs <= endTimeMs || otherEndTimeMs > startTimeMs) {
                     bandToUse++;
                     continue findFreeSpotInNextBand;
                 }

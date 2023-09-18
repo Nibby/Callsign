@@ -4,14 +4,14 @@ import java.util.Map;
 
 public final class InstantTrace extends Trace {
 
-    private final long timeNs;
+    private final long timeMs;
 
-    public InstantTrace(Map<String, String> attributes, long timeNs) {
+    public InstantTrace(Map<String, String> attributes, long timeMs) {
         super(attributes);
-        this.timeNs = timeNs;
+        this.timeMs = timeMs;
     }
 
-    public long getTimeNs() {
-        return timeNs;
+    public long getTimeMs() {
+        return timeMs;
     }
 }

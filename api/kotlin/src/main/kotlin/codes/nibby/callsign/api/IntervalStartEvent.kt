@@ -7,7 +7,7 @@ import java.util.*
  * of such an event. The counterpart to this event is [IntervalEndEvent].
  *
  * @param name Name of this event
- * @param timeNs Approximate time (in nanoseconds) this event occurred on
+ * @param timeMs Approximate time (in milliseconds) this event occurred on
  *
  * @see IntervalEndEvent
  * @see InstantEvent
@@ -17,8 +17,8 @@ import java.util.*
 class IntervalStartEvent internal constructor(
     existingId: UUID?,
     name: String,
-    timeNs: Long
-) : Event(existingId, null, TYPE, name, timeNs) {
+    timeMs: Long
+) : Event(existingId, null, TYPE, name, timeMs) {
 
     internal var recorded: Boolean = false
 
@@ -26,6 +26,6 @@ class IntervalStartEvent internal constructor(
         const val TYPE = "t-s"
     }
 
-    constructor(name: String, timeNs: Long) : this(null, name, timeNs)
+    constructor(name: String, timeMs: Long) : this(null, name, timeMs)
 
 }

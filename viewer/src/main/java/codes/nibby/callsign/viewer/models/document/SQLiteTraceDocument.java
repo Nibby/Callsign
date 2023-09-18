@@ -26,8 +26,8 @@ public class SQLiteTraceDocument implements TraceDocument {
     protected final Path path;
     protected Connection connection;
 
-    protected long earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
-    protected long latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
+    protected long earliestEventStartTimeMs = UNDEFINED_START_TIME_MS;
+    protected long latestEventEndTimeMs = UNDEFINED_END_TIME_MS;
     protected boolean hasMetadataRow = false;
     protected volatile AttributeHeaderData attributeHeaderData = null;
 
@@ -58,8 +58,8 @@ public class SQLiteTraceDocument implements TraceDocument {
             ResultSet resultSet = statement.executeQuery("SELECT * FROM " + Schema.MetadataTable.TABLE_NAME);
 
             if (resultSet.next()) {
-                earliestEventStartTimeNs = resultSet.getLong(Schema.MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS);
-                latestEventEndTimeNs = resultSet.getLong(Schema.MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS);
+                earliestEventStartTimeMs = resultSet.getLong(Schema.MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_MS);
+                latestEventEndTimeMs = resultSet.getLong(Schema.MetadataTable.COLUMN_LATEST_EVENT_END_TIME_MS);
                 hasMetadataRow = true;
             }
         }
@@ -72,8 +72,8 @@ public class SQLiteTraceDocument implements TraceDocument {
                 connection.close();
                 connection = null;
 
-                earliestEventStartTimeNs = UNDEFINED_START_TIME_NS;
-                latestEventEndTimeNs = UNDEFINED_END_TIME_NS;
+                earliestEventStartTimeMs = UNDEFINED_START_TIME_MS;
+                latestEventEndTimeMs = UNDEFINED_END_TIME_MS;
             } catch (SQLException e) {
                 throw new TraceDocumentAccessException("Failed to close SQLite connection", e);
             }
@@ -151,10 +151,10 @@ public class SQLiteTraceDocument implements TraceDocument {
         AttributeHeaderData headerData,
         Consumer<Trace> consumer
     ) throws SQLException {
-        long timeNs = resultSet.getLong(EventsTable.COLUMN_TIME_NS);
+        long timeMs = resultSet.getLong(EventsTable.COLUMN_TIME_MS);
 
         Map<String, String> attributes = loadEntryAttributes(resultSet, headerData);
-        Trace entry = new InstantTrace(attributes, timeNs);
+        Trace entry = new InstantTrace(attributes, timeMs);
 
         consumer.accept(entry);
     }
@@ -263,13 +263,13 @@ public class SQLiteTraceDocument implements TraceDocument {
                2: start.event_id
                3: start.correlation_id
                4: start.event_type
-               5: start.time_ns
+               5: start.time_ms
              5+n: start.[custom_attributes]   (0 <= x <= n)
            5+n+1: end.id
            5+n+2: end.event_id
            5+n+3: end.correlation_id
            5+n+4: end.event_type
-           5+n+5: end.time_ns
+           5+n+5: end.time_ms
            5+n+m: end.[custom_attributes]     (0 <= x <= m)
          */
 
@@ -280,13 +280,13 @@ public class SQLiteTraceDocument implements TraceDocument {
         index++; // skip start.correlation_id
         index++; // skip start.event_type
 
-        // Read start.time_ns
-        long startTimeNs = resultSet.getLong(index++);
+        // Read start.time_ms
+        long startTimeMs = resultSet.getLong(index++);
 
-        if (startTimeNs == 0) {
+        if (startTimeMs == 0) {
             // The event representing the start has probably been chopped off from the raw trace data
             // so assume the event has started some unknown time ago
-            startTimeNs = UNDEFINED_START_TIME_NS;
+            startTimeMs = UNDEFINED_START_TIME_MS;
         }
 
         // Read all attributes from start.*
@@ -306,13 +306,13 @@ public class SQLiteTraceDocument implements TraceDocument {
         index++; // skip end.correlation_id
         index++; // skip end.event_type
 
-        // Read end.time_ns
-        long endTimeNs = resultSet.getLong(index++);
+        // Read end.time_ms
+        long endTimeMs = resultSet.getLong(index++);
 
-        if (endTimeNs == 0) {
+        if (endTimeMs == 0) {
             // The event representing the completion has not been received according to the raw trace
             // data, so assume the event is still ongoing
-            endTimeNs = UNDEFINED_END_TIME_NS;
+            endTimeMs = UNDEFINED_END_TIME_MS;
         }
 
         indexRef.set(index);
@@ -324,7 +324,7 @@ public class SQLiteTraceDocument implements TraceDocument {
             endEventAttributes = null;
         }
 
-        Trace entry = new IntervalTrace(startEventAttributes, endEventAttributes, startTimeNs, endTimeNs);
+        Trace entry = new IntervalTrace(startEventAttributes, endEventAttributes, startTimeMs, endTimeMs);
 
         consumer.accept(entry);
     }
@@ -351,15 +351,15 @@ public class SQLiteTraceDocument implements TraceDocument {
     }
 
     @Override
-    public long getEarliestEventStartTimeNs() {
+    public long getEarliestEventStartTimeMs() {
         assertLoaded();
-        return earliestEventStartTimeNs;
+        return earliestEventStartTimeMs;
     }
 
     @Override
-    public long getLatestEventEndTimeNs() {
+    public long getLatestEventEndTimeMs() {
         assertLoaded();
-        return latestEventEndTimeNs;
+        return latestEventEndTimeMs;
     }
 
     @Override
@@ -376,7 +376,7 @@ public class SQLiteTraceDocument implements TraceDocument {
             static final String COLUMN_EVENT_ID = "event_id";
             static final String COLUMN_CORRELATION_ID = "correlation_id";
             static final String COLUMN_EVENT_TYPE = "event_type";
-            static final String COLUMN_TIME_NS = "time_ns";
+            static final String COLUMN_TIME_MS = "time_ms";
         }
 
         static final class AttributeHeaderTable {
@@ -391,8 +391,8 @@ public class SQLiteTraceDocument implements TraceDocument {
             static final String TABLE_NAME = "metadata";
 
             static final String COLUMN_ID = "id";
-            static final String COLUMN_EARLIEST_EVENT_START_TIME_NS = "earliest_event_start_time_ns";
-            static final String COLUMN_LATEST_EVENT_END_TIME_NS = "latest_event_end_time_ns";
+            static final String COLUMN_EARLIEST_EVENT_START_TIME_MS = "earliest_event_start_time_ms";
+            static final String COLUMN_LATEST_EVENT_END_TIME_MS = "latest_event_end_time_ms";
         }
     }
 

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Instant
 import java.util.*
 
 class CsvFileSinkTest {
@@ -65,7 +66,7 @@ class CsvFileSinkTest {
     @Test
     fun testConstructor_outputFileExists_preservesExistingContent() {
         val sink = CsvFileSink(testDataFolder.resolve("testFile"))
-        sink.publishEvent(InstantEvent("Test", System.nanoTime()))
+        sink.publishEvent(InstantEvent("Test", Instant.now().toEpochMilli()))
 
         val fileLengthInFirstSession = sink.outputFile.toFile().length()
 
@@ -81,7 +82,7 @@ class CsvFileSinkTest {
         val sink = CsvFileSink(testDataFolder.resolve("testFile"))
 
         testWritesDataEveryCall(sink) {
-            sink.publishEvent(InstantEvent("Test", System.nanoTime()))
+            sink.publishEvent(InstantEvent("Test", Instant.now().toEpochMilli()))
         }
     }
 

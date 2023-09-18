@@ -6,6 +6,7 @@ import codes.nibby.callsign.api.IntervalEndEvent
 import codes.nibby.callsign.api.IntervalStartEvent
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -16,7 +17,7 @@ class CsvFormatTest {
 
     @Test
     fun testSerialize_instantEvent() {
-        val time = System.nanoTime()
+        val time = Instant.now().toEpochMilli()
         val id = UUID.randomUUID()
         val eventName = "TestEvent"
         val event = InstantEvent(id, eventName, time)
@@ -40,7 +41,7 @@ class CsvFormatTest {
 
     @Test
     fun testSerialize_intervalStartEvent() {
-        val time = System.nanoTime()
+        val time = Instant.now().toEpochMilli()
         val id = UUID.randomUUID()
         val eventName = "TestEvent"
         val event = IntervalStartEvent(id, eventName, time)
@@ -64,7 +65,7 @@ class CsvFormatTest {
 
     @Test
     fun testSerialize_intervalEndEvent() {
-        val time = System.nanoTime()
+        val time = Instant.now().toEpochMilli()
         val id = UUID.randomUUID()
         val correlationId = UUID.randomUUID()
         val eventName = "TestEvent"
@@ -90,7 +91,7 @@ class CsvFormatTest {
 
     @Test
     fun testRoundTripDeserialize_instantEvent() {
-        val time = System.nanoTime()
+        val time = Instant.now().toEpochMilli()
         val id = UUID.randomUUID()
         val eventName = "TestEvent"
         val event = IntervalStartEvent(id, eventName, time)
@@ -106,13 +107,13 @@ class CsvFormatTest {
         assertEquals(id, deserializedEvent.id)
         assertEquals(null, deserializedEvent.correlationId)
         assertEquals(eventName, deserializedEvent.name)
-        assertEquals(time, deserializedEvent.timeNs)
+        assertEquals(time, deserializedEvent.timeMs)
         assertEquals(event.getAttributeData(), deserializedEvent.getAttributeData())
     }
 
     @Test
     fun testRoundTripDeserialize_intervalStartEvent() {
-        val time = System.nanoTime()
+        val time = Instant.now().toEpochMilli()
         val id = UUID.randomUUID()
         val eventName = "TestEvent"
         val event = IntervalStartEvent(id, eventName, time)
@@ -128,13 +129,13 @@ class CsvFormatTest {
         assertEquals(id, deserializedEvent.id)
         assertEquals(null, deserializedEvent.correlationId)
         assertEquals(eventName, deserializedEvent.name)
-        assertEquals(time, deserializedEvent.timeNs)
+        assertEquals(time, deserializedEvent.timeMs)
         assertEquals(event.getAttributeData(), deserializedEvent.getAttributeData())
     }
 
     @Test
     fun testRoundTripDeserialize_intervalEndEvent() {
-        val time = System.nanoTime()
+        val time = Instant.now().toEpochMilli()
         val id = UUID.randomUUID()
         val correlationId = UUID.randomUUID()
         val eventName = "TestEvent"
@@ -151,7 +152,7 @@ class CsvFormatTest {
         assertEquals(id, deserializedEvent.id)
         assertEquals(correlationId, deserializedEvent.correlationId)
         assertEquals(eventName, deserializedEvent.name)
-        assertEquals(time, deserializedEvent.timeNs)
+        assertEquals(time, deserializedEvent.timeMs)
         assertEquals(event.getAttributeData(), deserializedEvent.getAttributeData())
     }
 

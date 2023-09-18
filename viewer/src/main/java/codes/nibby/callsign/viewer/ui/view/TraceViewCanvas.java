@@ -14,7 +14,6 @@ import javafx.scene.text.Text;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 final class TraceViewCanvas extends Canvas {
 
@@ -49,6 +48,10 @@ final class TraceViewCanvas extends Canvas {
     }
 
     private void paintTraceBackground(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+        TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
+        graphics.setFill(colorScheme.getContentBackground());
+        graphics.fillRect(0, 0, getWidth(), getHeight());
+
         TraceContent.DisplayData displayData = traces.getDisplayData();
         double yStart = perspective.getViewportStartY() - perspective.getDisplayOffsetY();
 
@@ -73,8 +76,6 @@ final class TraceViewCanvas extends Canvas {
 
             boolean isAlternateRow = displayIndex % 2 == 1;
 
-            TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
-
             graphics.setFill(isAlternateRow ? colorScheme.getContentAlternateRowBackground() : colorScheme.getContentRowBackground());
             graphics.fillRect(perspective.getViewportStartX(), yStart, perspective.getViewportWidth(), perspective.getViewportHeight());
 
@@ -91,20 +92,20 @@ final class TraceViewCanvas extends Canvas {
         var height = perspective.getViewportHeight();
 
         TraceViewPerspective.MajorTickIncrementDescriptor majorTickDescriptor = perspective.getTimelineMajorTickDescriptor();
-        long startTime = perspective.getTimeNsFromDisplayX(0);
-        long startTimeExcess = startTime % majorTickDescriptor.timeNs();
+        long startTime = perspective.getTimeMsFromDisplayX(0);
+        long startTimeExcess = startTime % majorTickDescriptor.timeMs();
         if (startTimeExcess != 0) {
             startTime -= startTimeExcess;
         }
 
-        long endTime = perspective.getTimeNsFromDisplayX(getWidth() / 6 * 7);
-        long endTimeExcess = endTime % majorTickDescriptor.timeNs();
+        long endTime = perspective.getTimeMsFromDisplayX(getWidth() / 6 * 7);
+        long endTimeExcess = endTime % majorTickDescriptor.timeMs();
         if (endTimeExcess != 0) {
-            endTime += (majorTickDescriptor.timeNs() - endTimeExcess);
+            endTime += (majorTickDescriptor.timeMs() - endTimeExcess);
         }
 
-        for (long timeNs = startTime; timeNs < endTime; timeNs += majorTickDescriptor.timeNs()) {
-            double majorTickX = perspective.getDisplayX(timeNs);
+        for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.timeMs()) {
+            double majorTickX = perspective.getDisplayX(timeMs);
             graphics.fillRect(x + majorTickX, y, 1, height);
         }
     }
@@ -163,8 +164,8 @@ final class TraceViewCanvas extends Canvas {
 
         for (Trace trace : bandTraces) {
             if (displayOptions.isShowIntervalTraces() && trace instanceof IntervalTrace intervalTrace) {
-                double xStart = perspective.getDisplayX(intervalTrace.getStartTimeNs());
-                double width = perspective.getDisplayWidth((intervalTrace.getEndTimeNs() - intervalTrace.getStartTimeNs()));
+                double xStart = perspective.getDisplayX(intervalTrace.getStartTimeMs());
+                double width = perspective.getDisplayWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
 
                 graphics.setFill(colorScheme.getIntervalTraceEventBackground());
                 graphics.fillRect(xStart, yStart + 6, width, bandHeight - 12);
@@ -179,7 +180,7 @@ final class TraceViewCanvas extends Canvas {
 
         if (displayOptions.isShowInstantTraces()) {
             for (InstantTrace instantTrace : instantTraces) {
-                double xStart = perspective.getDisplayX(instantTrace.getTimeNs());
+                double xStart = perspective.getDisplayX(instantTrace.getTimeMs());
                 double size = bandHeight - 18;
 
                 graphics.setFill(colorScheme.getInstantTraceEventBackground());
@@ -233,25 +234,24 @@ final class TraceViewCanvas extends Canvas {
         graphics.setFill(colorScheme.getTimelineMajorTick());
 
         TraceViewPerspective.MajorTickIncrementDescriptor majorTickDescriptor = perspective.getTimelineMajorTickDescriptor();
-        long startTime = perspective.getTimeNsFromDisplayX(0);
-        long startTimeExcess = startTime % majorTickDescriptor.timeNs();
+        long startTime = perspective.getTimeMsFromDisplayX(0);
+        long startTimeExcess = startTime % majorTickDescriptor.timeMs();
         if (startTimeExcess != 0) {
             startTime -= startTimeExcess;
         }
 
-        long endTime = perspective.getTimeNsFromDisplayX(getWidth() / 6 * 7);
-        long endTimeExcess = endTime % majorTickDescriptor.timeNs();
+        long endTime = perspective.getTimeMsFromDisplayX(getWidth() / 6 * 7);
+        long endTimeExcess = endTime % majorTickDescriptor.timeMs();
         if (endTimeExcess != 0) {
-            endTime += (majorTickDescriptor.timeNs() - endTimeExcess);
+            endTime += (majorTickDescriptor.timeMs() - endTimeExcess);
         }
 
-        for (long timeNs = startTime; timeNs < endTime; timeNs += majorTickDescriptor.timeNs()) {
-            double majorTickX = perspective.getDisplayX(timeNs);
+        for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.timeMs()) {
+            double majorTickX = perspective.getDisplayX(timeMs);
             graphics.fillRect(x + majorTickX, height - borderHeight - majorTickHeight, 1, majorTickHeight);
 
             String dateText = null, timeText = null;
-            long timeInMilliseconds = TimeUnit.NANOSECONDS.toMillis(timeNs);
-            Date dateAndTime = new Date(timeInMilliseconds);
+            Date dateAndTime = new Date(timeMs);
 
             if (majorTickDescriptor.dateFormat() != null) {
                 dateText = majorTickDescriptor.dateFormat().format(dateAndTime);
@@ -262,7 +262,7 @@ final class TraceViewCanvas extends Canvas {
             }
 
             if (dateText == null && timeText == null) {
-                timeText = String.valueOf(TimeUnit.NANOSECONDS.toMillis(timeNs));
+                timeText = String.valueOf(timeMs);
             }
 
             var textY = height - borderHeight;

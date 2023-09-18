@@ -28,11 +28,11 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     private static final double TRACK_BAND_HEIGHT = 30d;
 
     // Horizontal display parameters
-    private long earliestEventTimeNs;
-    private long latestEventTimeNs;
+    private long earliestEventTimeMs;
+    private long latestEventTimeMs;
     private MajorTickIncrementDescriptor timelineMajorTickDescriptor;
 
-    private long displayStartTimeOffsetNs = 0; // dictates horizontal scroll, leftmost edge of screen = earliestEventTimeNs + this value
+    private long displayStartTimeOffsetMs = 0; // dictates horizontal scroll, leftmost edge of screen = earliestEventTimeMs + this value
     private HorizontalZoom trackHorizontalZoom = HorizontalZoom.of(1d);
 
     private boolean firstCompute = true;
@@ -47,8 +47,8 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     private static final List<MajorTickIncrementType> SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS = new ArrayList<>();
 
     private record MajorTickIncrementType(TimeUnit unit, int amount, @Nullable DateFormat dateFormat, @Nullable DateFormat timeFormat) {
-        public long getIncrementTimeNs() {
-            return unit.toNanos(amount);
+        public long getIncrementTimeMs() {
+            return unit.toMillis(amount);
         }
     }
 
@@ -94,16 +94,6 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 100, null, TIME_FORMAT_HH_MM_SS_MILLI));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 200, null, TIME_FORMAT_HH_MM_SS_MILLI));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 500, null, TIME_FORMAT_HH_MM_SS_MILLI));
-
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 1, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 2, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 5, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 10, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 20, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 50, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 100, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 200, null, null));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MICROSECONDS, 500, null, null));
     }
 
     /**
@@ -111,13 +101,13 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
      *
      * @param totalWidth Total amount of horizontal space, in pixels, to display trace viewer content
      * @param totalHeight Total amount of vertical space, in pixels, to display trace viewer content
-     * @param earliestEventTimeNs Starting time of the earliest trace event, in nanoseconds
-     * @param latestEventTimeNs Finish time of the latest trace event, in nanoseconds
+     * @param earliestEventTimeMs Starting time of the earliest trace event, in milliseconds
+     * @param latestEventTimeMs Finish time of the latest trace event, in milliseconds
      *
      * @return true if any perspective parameters have changed after calling this method. If true,
      *         the displayed content must be repainted so the new perspective is applied.
      */
-    public boolean applyProperties(double totalWidth, double totalHeight, long earliestEventTimeNs, long latestEventTimeNs) {
+    public boolean applyProperties(double totalWidth, double totalHeight, long earliestEventTimeMs, long latestEventTimeMs) {
 
         boolean totalTimeRangeChanged = false;
         boolean displayTimeRangeChanged = false;
@@ -133,13 +123,13 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
             displayTimeRangeChanged = true;
         }
 
-        if (this.earliestEventTimeNs != earliestEventTimeNs) {
-            this.earliestEventTimeNs = earliestEventTimeNs;
+        if (this.earliestEventTimeMs != earliestEventTimeMs) {
+            this.earliestEventTimeMs = earliestEventTimeMs;
             totalTimeRangeChanged = true;
         }
 
-        if (this.latestEventTimeNs != latestEventTimeNs) {
-            this.latestEventTimeNs = Math.max(latestEventTimeNs, this.earliestEventTimeNs + 1);
+        if (this.latestEventTimeMs != latestEventTimeMs) {
+            this.latestEventTimeMs = Math.max(latestEventTimeMs, this.earliestEventTimeMs + 1);
             totalTimeRangeChanged = true;
         }
 
@@ -149,8 +139,8 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
         }
 
         if (displayTimeRangeChanged) {
-            double totalDisplayableTimeNs = trackHorizontalZoom.measureTimeNs(viewportWidth);
-            this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor(totalDisplayableTimeNs);
+            double totalDisplayableTimeMs = trackHorizontalZoom.measureTimeMs(viewportWidth);
+            this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor(totalDisplayableTimeMs);
         }
 
         return firstCompute || totalTimeRangeChanged || displayTimeRangeChanged;
@@ -159,7 +149,7 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     private MajorTickIncrementDescriptor computeTimelineMajorTickDescriptor(double displayedTimeRange) {
         Text measurement = new Text("XX:XX:XX.XXX");
         double width = measurement.getBoundsInLocal().getWidth();
-        double minimumTimeNsIncrement = trackHorizontalZoom.measureTimeNs(width / 3 * 7);
+        double minimumTimeMsIncrement = trackHorizontalZoom.measureTimeMs(width / 3 * 7);
 
         final int idealDisplayedTickCount = 8;
 
@@ -169,12 +159,12 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
         for (int i = SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.size() - 1; i >= 0; i--) {
             MajorTickIncrementType majorTickType = SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.get(i);
 
-            long unitTimeNs = majorTickType.getIncrementTimeNs();
-            if (unitTimeNs < minimumTimeNsIncrement) {
+            long unitTimeMs = majorTickType.getIncrementTimeMs();
+            if (unitTimeMs < minimumTimeMsIncrement) {
                 continue;
             }
 
-            int displayedTickCount = (int) (Math.floor(displayedTimeRange / unitTimeNs));
+            int displayedTickCount = (int) (Math.floor(displayedTimeRange / unitTimeMs));
 
             if (displayedTickCount < 4) {
                 continue;
@@ -185,10 +175,10 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
         }
 
         if (bestCandidate != null) {
-            long timeIncrement = Objects.requireNonNull(bestCandidate).unit.toNanos(bestCandidate.amount);
-            return new MajorTickIncrementDescriptor(timeIncrement, bestCandidate.dateFormat, bestCandidate.timeFormat);
+            long timeIncrementMs = Objects.requireNonNull(bestCandidate).unit.toMillis(bestCandidate.amount);
+            return new MajorTickIncrementDescriptor(timeIncrementMs, bestCandidate.dateFormat, bestCandidate.timeFormat);
         } else {
-            return new MajorTickIncrementDescriptor(Math.round(minimumTimeNsIncrement), null, null);
+            return new MajorTickIncrementDescriptor(Math.round(minimumTimeMsIncrement), null, null);
         }
     }
 
@@ -202,31 +192,31 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     }
 
     @Override
-    public double getDisplayX(long timeNs) {
-        long timeElapsedSinceDisplayStartTime = timeNs - (earliestEventTimeNs + displayStartTimeOffsetNs);
+    public double getDisplayX(long timeMs) {
+        long timeElapsedSinceDisplayStartTime = timeMs - (earliestEventTimeMs + displayStartTimeOffsetMs);
         double pixelsFromLeftEdge = trackHorizontalZoom.measurePixels(timeElapsedSinceDisplayStartTime);
 
         return gutterWidth + pixelsFromLeftEdge;
     }
 
     @Override
-    public long getTimeNsFromDisplayX(double displayX) {
-        long timeNsSinceDisplayStartTime = Math.round(trackHorizontalZoom.measureTimeNs(displayX));
-        return earliestEventTimeNs + displayStartTimeOffsetNs + timeNsSinceDisplayStartTime;
+    public long getTimeMsFromDisplayX(double displayX) {
+        long timeMsSinceDisplayStartTime = Math.round(trackHorizontalZoom.measureTimeMs(displayX));
+        return earliestEventTimeMs + displayStartTimeOffsetMs + timeMsSinceDisplayStartTime;
     }
 
     /**
-     * @return Time (in nanoseconds) represented on the left edge of the viewable region.
+     * @return Time (in milliseconds) represented on the left edge of the viewable region.
      */
-    public long getDisplayedEarliestEventTimeNs() {
-        return getTimeNsFromDisplayX(0d);
+    public long getDisplayedEarliestEventTimeMs() {
+        return getTimeMsFromDisplayX(0d);
     }
 
     /**
-     * @return Time (in nanoseconds) represented on the right edge of the viewable region.
+     * @return Time (in milliseconds) represented on the right edge of the viewable region.
      */
-    public long getDisplayedLatestEventTimeNs() {
-        return getTimeNsFromDisplayX(getViewportWidth());
+    public long getDisplayedLatestEventTimeMs() {
+        return getTimeMsFromDisplayX(getViewportWidth());
     }
 
     @Override
@@ -284,8 +274,8 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
         return displayOffsetY;
     }
 
-    public void setDisplayOffsetTimeNs(long timeNs) {
-        displayStartTimeOffsetNs = Math.max(0, timeNs);
+    public void setDisplayOffsetTimeMs(long timeMs) {
+        displayStartTimeOffsetMs = Math.max(0, timeMs);
     }
 
     @Override

@@ -9,8 +9,8 @@ import java.util.function.Consumer;
 
 public interface TraceDocument {
 
-    long UNDEFINED_START_TIME_NS = -1;
-    long UNDEFINED_END_TIME_NS = -2;
+    long UNDEFINED_START_TIME_MS = -1;
+    long UNDEFINED_END_TIME_MS = -2;
 
     void load() throws TraceDocumentAccessException;
 
@@ -20,9 +20,9 @@ public interface TraceDocument {
 
     void streamTraces(TraceFilters filters, Consumer<Trace> consumer) throws TraceDocumentAccessException;
 
-    long getEarliestEventStartTimeNs();
+    long getEarliestEventStartTimeMs();
 
-    long getLatestEventEndTimeNs();
+    long getLatestEventEndTimeMs();
 
     Path getPath();
 

@@ -10,8 +10,8 @@ import com.google.common.base.Preconditions;
 public final class HorizontalZoom {
 
     // We define 100% zoom = 1d (zoom value) = 50 pixels to represent 1 second.
-    // Rest of the program measures time in nanoseconds, but the concept is identical.
-    private static final double NS_PER_PIXEL_AT_100_PERCENT_ZOOM = 20_000_000;
+    // Rest of the program measures time in milliseconds, but the concept is identical.
+    private static final double MS_PER_PIXEL_AT_100_PERCENT_ZOOM = 20;
 
 
     public final double value;
@@ -22,16 +22,16 @@ public final class HorizontalZoom {
         this.value = value;
     }
 
-    public double nsPerPixel() {
-        return NS_PER_PIXEL_AT_100_PERCENT_ZOOM / value;
+    public double msPerPixel() {
+        return MS_PER_PIXEL_AT_100_PERCENT_ZOOM / value;
     }
 
     public double measurePixels(long timeDurationNs) {
-        return Math.ceil(timeDurationNs / nsPerPixel());
+        return Math.ceil(timeDurationNs / msPerPixel());
     }
 
-    public double measureTimeNs(double pixels) {
-        return pixels * nsPerPixel();
+    public double measureTimeMs(double pixels) {
+        return pixels * msPerPixel();
     }
 
     public HorizontalZoom adjust(double increment) {

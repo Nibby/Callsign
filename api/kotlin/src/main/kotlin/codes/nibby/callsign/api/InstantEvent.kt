@@ -6,7 +6,7 @@ import java.util.*
  * Represents a one-off [Event] that occurred at a single point in time.
  *
  * @param name Name of this event
- * @param timeNs Approximate time (in nanoseconds) this event occurred on
+ * @param timeMs Approximate time (in millisecond) this event occurred on
  *
  * @see Event
  * @see IntervalStartEvent
@@ -16,13 +16,13 @@ import java.util.*
 class InstantEvent(
     existingId: UUID?,
     name: String,
-    timeNs: Long
-) : Event(existingId, null, TYPE, name, timeNs) {
+    timeMs: Long
+) : Event(existingId, null, TYPE, name, timeMs) {
 
     companion object {
         const val TYPE = "i"
     }
 
-    constructor(name: String, timeNs: Long) : this(null, name, timeNs)
+    constructor(name: String, timeMs: Long) : this(null, name, timeMs)
 
 }

@@ -10,8 +10,8 @@ public final class TraceTrack implements Comparable<TraceTrack> {
     private final String binningAttributeValue;
     private final String displayAttributeName;
 
-    private Long earliestEntryTimeNs = null;
-    private Long latestEntryEndTimeNs = null;
+    private Long earliestEntryTimeMs = null;
+    private Long latestEntryEndTimeMs = null;
 
     public TraceTrack(
         String binningAttributeName,
@@ -37,31 +37,31 @@ public final class TraceTrack implements Comparable<TraceTrack> {
 
     public void notifyTraceAdded(Trace event) {
         if (event instanceof InstantTrace instantEvent) {
-            earliestEntryTimeNs = (earliestEntryTimeNs == null)
-                ? instantEvent.getTimeNs()
-                : Math.min(instantEvent.getTimeNs(), earliestEntryTimeNs);
+            earliestEntryTimeMs = (earliestEntryTimeMs == null)
+                ? instantEvent.getTimeMs()
+                : Math.min(instantEvent.getTimeMs(), earliestEntryTimeMs);
 
-            latestEntryEndTimeNs = (latestEntryEndTimeNs == null)
-                ? instantEvent.getTimeNs()
-                : Math.max(instantEvent.getTimeNs(), latestEntryEndTimeNs);
+            latestEntryEndTimeMs = (latestEntryEndTimeMs == null)
+                ? instantEvent.getTimeMs()
+                : Math.max(instantEvent.getTimeMs(), latestEntryEndTimeMs);
 
         } else if (event instanceof IntervalTrace timedEvent) {
-            earliestEntryTimeNs = (earliestEntryTimeNs == null)
-                ? timedEvent.getStartTimeNs()
-                : Math.min(timedEvent.getStartTimeNs(), earliestEntryTimeNs);
+            earliestEntryTimeMs = (earliestEntryTimeMs == null)
+                ? timedEvent.getStartTimeMs()
+                : Math.min(timedEvent.getStartTimeMs(), earliestEntryTimeMs);
 
-            latestEntryEndTimeNs = (latestEntryEndTimeNs == null)
-                ? timedEvent.getStartTimeNs()
-                : Math.max(timedEvent.getEndTimeNs(), latestEntryEndTimeNs);
+            latestEntryEndTimeMs = (latestEntryEndTimeMs == null)
+                ? timedEvent.getStartTimeMs()
+                : Math.max(timedEvent.getEndTimeMs(), latestEntryEndTimeMs);
         }
     }
 
-    public Long getEarliestEntryTimeNs() {
-        return earliestEntryTimeNs;
+    public Long getEarliestEntryTimeMs() {
+        return earliestEntryTimeMs;
     }
 
-    public Long getLatestEntryEndTimeNs() {
-        return latestEntryEndTimeNs;
+    public Long getLatestEntryEndTimeMs() {
+        return latestEntryEndTimeMs;
     }
 
     @Override
@@ -81,14 +81,14 @@ public final class TraceTrack implements Comparable<TraceTrack> {
 
     @Override
     public int compareTo(@NotNull TraceTrack other) {
-        if (this.earliestEntryTimeNs == null) {
+        if (this.earliestEntryTimeMs == null) {
             return 1;
         }
 
-        if (other.earliestEntryTimeNs == null) {
+        if (other.earliestEntryTimeMs == null) {
             return -1;
         }
 
-        return Long.compare(earliestEntryTimeNs, other.earliestEntryTimeNs);
+        return Long.compare(earliestEntryTimeMs, other.earliestEntryTimeMs);
     }
 }

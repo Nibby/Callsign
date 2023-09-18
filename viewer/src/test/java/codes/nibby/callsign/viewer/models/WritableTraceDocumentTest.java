@@ -61,8 +61,8 @@ public abstract class WritableTraceDocumentTest {
             var trace = traces.get(0);
 
             assertInstanceOf(InstantTrace.class, trace);
-            assertEquals(event.getTimeNs(), document.getEarliestEventStartTimeNs());
-            assertEquals(event.getTimeNs(), document.getLatestEventEndTimeNs());
+            assertEquals(event.getTimeMs(), document.getEarliestEventStartTimeMs());
+            assertEquals(event.getTimeMs(), document.getLatestEventEndTimeMs());
 
             assertAttributeEquals(event, trace);
         });
@@ -86,10 +86,10 @@ public abstract class WritableTraceDocumentTest {
             assertInstanceOf(IntervalTrace.class, trace);
 
             var intervalTrace = (IntervalTrace) trace;
-            assertEquals(event.getTimeNs(), intervalTrace.getStartTimeNs());
-            assertEquals(TraceDocument.UNDEFINED_END_TIME_NS, intervalTrace.getEndTimeNs());
-            assertEquals(event.getTimeNs(), document.getEarliestEventStartTimeNs());
-            assertEquals(TraceDocument.UNDEFINED_END_TIME_NS, document.getLatestEventEndTimeNs());
+            assertEquals(event.getTimeMs(), intervalTrace.getStartTimeMs());
+            assertEquals(TraceDocument.UNDEFINED_END_TIME_MS, intervalTrace.getEndTimeMs());
+            assertEquals(event.getTimeMs(), document.getEarliestEventStartTimeMs());
+            assertEquals(TraceDocument.UNDEFINED_END_TIME_MS, document.getLatestEventEndTimeMs());
 
             assertAttributeEquals(event, trace);
         });
@@ -113,10 +113,10 @@ public abstract class WritableTraceDocumentTest {
             assertInstanceOf(IntervalTrace.class, trace);
 
             var intervalTrace = (IntervalTrace) trace;
-            assertEquals(TraceDocument.UNDEFINED_START_TIME_NS, intervalTrace.getStartTimeNs());
-            assertEquals(event.getTimeNs(), intervalTrace.getEndTimeNs());
-            assertEquals(TraceDocument.UNDEFINED_START_TIME_NS, document.getEarliestEventStartTimeNs());
-            assertEquals(event.getTimeNs(), document.getLatestEventEndTimeNs());
+            assertEquals(TraceDocument.UNDEFINED_START_TIME_MS, intervalTrace.getStartTimeMs());
+            assertEquals(event.getTimeMs(), intervalTrace.getEndTimeMs());
+            assertEquals(TraceDocument.UNDEFINED_START_TIME_MS, document.getEarliestEventStartTimeMs());
+            assertEquals(event.getTimeMs(), document.getLatestEventEndTimeMs());
 
             assertAttributeEquals(event, trace);
         });
@@ -126,7 +126,7 @@ public abstract class WritableTraceDocumentTest {
     public void testAppendThenStream_intervalStartAndEndEvent_treatedAsPair() throws Exception {
         var writableDocument = createWritableInstance();
 
-        var durationNs = TimeUnit.MILLISECONDS.toNanos(400);
+        var durationNs = TimeUnit.MILLISECONDS.toMillis(400);
         var eventPair = TestDataGenerator.generateIntervalEventPair(durationNs).asList();
 
         var startEvent = eventPair.get(0);
@@ -146,10 +146,10 @@ public abstract class WritableTraceDocumentTest {
             assertInstanceOf(IntervalTrace.class, trace);
 
             var intervalTrace = (IntervalTrace) trace;
-            assertEquals(startEvent.getTimeNs(), intervalTrace.getStartTimeNs());
-            assertEquals(endEvent.getTimeNs(), intervalTrace.getEndTimeNs());
-            assertEquals(startEvent.getTimeNs(), document.getEarliestEventStartTimeNs());
-            assertEquals(endEvent.getTimeNs(), document.getLatestEventEndTimeNs());
+            assertEquals(startEvent.getTimeMs(), intervalTrace.getStartTimeMs());
+            assertEquals(endEvent.getTimeMs(), intervalTrace.getEndTimeMs());
+            assertEquals(startEvent.getTimeMs(), document.getEarliestEventStartTimeMs());
+            assertEquals(endEvent.getTimeMs(), document.getLatestEventEndTimeMs());
 
             assertAttributeEquals(startEvent, trace);
             assertAttributeEquals(endEvent, trace);

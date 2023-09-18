@@ -87,12 +87,12 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
                 EventsTable.COLUMN_EVENT_ID + " TEXT NOT NULL," +
                 EventsTable.COLUMN_CORRELATION_ID + " TEXT NULL," +
                 EventsTable.COLUMN_EVENT_TYPE + " TEXT NOT NULL," +
-                EventsTable.COLUMN_TIME_NS + " INTEGER NULL" +
+                EventsTable.COLUMN_TIME_MS + " INTEGER NULL" +
             ")"
         );
 
         statement.execute("CREATE INDEX index_event_id ON event_data (" + EventsTable.COLUMN_EVENT_ID + ")");
-        statement.execute("CREATE INDEX index_time_ns ON event_data (" + EventsTable.COLUMN_TIME_NS + ")");
+        statement.execute("CREATE INDEX index_time_ns ON event_data (" + EventsTable.COLUMN_TIME_MS + ")");
         statement.execute("CREATE INDEX correlation_id ON event_data (" + EventsTable.COLUMN_CORRELATION_ID + ")");
     }
 
@@ -101,8 +101,8 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             "CREATE TABLE " + MetadataTable.TABLE_NAME +
             "(" +
                 MetadataTable.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS + " INTEGER NOT NULL," +
-                MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS + " INTEGER NOT NULL" +
+                MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_MS + " INTEGER NOT NULL," +
+                MetadataTable.COLUMN_LATEST_EVENT_END_TIME_MS + " INTEGER NOT NULL" +
             ")"
         );
     }
@@ -217,7 +217,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
                 EventsTable.COLUMN_EVENT_ID + ", " +
                 EventsTable.COLUMN_CORRELATION_ID + ", " +
                 EventsTable.COLUMN_EVENT_TYPE + ", " +
-                EventsTable.COLUMN_TIME_NS +
+                EventsTable.COLUMN_TIME_MS +
                 additionalAttributeColumns +
             ") " +
             "VALUES (?, ?, ?, ?" + additionalAttributeValues + ")";
@@ -229,15 +229,15 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
             statement.setString(index++, event.getCorrelationId() != null ? event.getCorrelationId().toString() : null);
             statement.setString(index++, event.getType());
 
-            long timeNs = event.getTimeNs();
-            statement.setLong(index++, timeNs);
+            long timeMs = event.getTimeMs();
+            statement.setLong(index++, timeMs);
 
             if (event instanceof IntervalStartEvent) {
-                updateMetadataIfApplicable(timeNs, null);
+                updateMetadataIfApplicable(timeMs, null);
             } else if (event instanceof IntervalEndEvent) {
-                updateMetadataIfApplicable(null, timeNs);
+                updateMetadataIfApplicable(null, timeMs);
             } else if (event instanceof InstantEvent instantEvent) {
-                updateMetadataIfApplicable(instantEvent.getTimeNs(), instantEvent.getTimeNs());
+                updateMetadataIfApplicable(instantEvent.getTimeMs(), instantEvent.getTimeMs());
             } else {
                 throw new IllegalArgumentException("Unsupported event type: " + event.getClass().getName());
             }
@@ -257,21 +257,21 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         }
     }
 
-    private void updateMetadataIfApplicable(Long startTimeNs, Long endTimeNs) throws SQLException {
+    private void updateMetadataIfApplicable(Long startTimeMs, Long endTimeMs) throws SQLException {
         boolean metadataChanged = false;
 
-        if (startTimeNs != null && !Objects.equals(earliestEventStartTimeNs, startTimeNs)) {
-            earliestEventStartTimeNs = earliestEventStartTimeNs == UNDEFINED_START_TIME_NS
-                ? startTimeNs
-                : Math.min(earliestEventStartTimeNs, startTimeNs);
+        if (startTimeMs != null && !Objects.equals(earliestEventStartTimeMs, startTimeMs)) {
+            earliestEventStartTimeMs = earliestEventStartTimeMs == UNDEFINED_START_TIME_MS
+                ? startTimeMs
+                : Math.min(earliestEventStartTimeMs, startTimeMs);
 
             metadataChanged = true;
         }
 
-        if (endTimeNs != null && !Objects.equals(latestEventEndTimeNs, endTimeNs)) {
-            latestEventEndTimeNs = latestEventEndTimeNs == UNDEFINED_END_TIME_NS
-                ? endTimeNs
-                : Math.max(latestEventEndTimeNs, endTimeNs);
+        if (endTimeMs != null && !Objects.equals(latestEventEndTimeMs, endTimeMs)) {
+            latestEventEndTimeMs = latestEventEndTimeMs == UNDEFINED_END_TIME_MS
+                ? endTimeMs
+                : Math.max(latestEventEndTimeMs, endTimeMs);
 
             metadataChanged = true;
         }
@@ -290,14 +290,14 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
         try (var statement = connection.prepareStatement(
             "INSERT INTO " + MetadataTable.TABLE_NAME +
             " (" +
-                MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS + ", " +
-                MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS +
+                MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_MS + ", " +
+                MetadataTable.COLUMN_LATEST_EVENT_END_TIME_MS +
             ") VALUES (?, ?)"
         )) {
             int index = 1;
 
-            statement.setLong(index++, earliestEventStartTimeNs);
-            statement.setLong(index++, latestEventEndTimeNs);
+            statement.setLong(index++, earliestEventStartTimeMs);
+            statement.setLong(index++, latestEventEndTimeMs);
 
             int rowsUpdated = statement.executeUpdate();
 
@@ -310,15 +310,15 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
     private void updateMetadataRow() throws SQLException {
         try (var statement = connection.prepareStatement(
             "UPDATE " + MetadataTable.TABLE_NAME + " SET " +
-                MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_NS + " = ?, " +
-                MetadataTable.COLUMN_LATEST_EVENT_END_TIME_NS + " = ?" +
+                MetadataTable.COLUMN_EARLIEST_EVENT_START_TIME_MS + " = ?, " +
+                MetadataTable.COLUMN_LATEST_EVENT_END_TIME_MS + " = ?" +
             " WHERE 1 = 1" // Update all rows, in case there's more than 1, or the ID=1 row got deleted before
                            // (shouldn't happen, but you never know)
         )) {
             int index = 1;
 
-            statement.setLong(index++, earliestEventStartTimeNs);
-            statement.setLong(index++, latestEventEndTimeNs);
+            statement.setLong(index++, earliestEventStartTimeMs);
+            statement.setLong(index++, latestEventEndTimeMs);
 
             int rowsUpdated = statement.executeUpdate();
 

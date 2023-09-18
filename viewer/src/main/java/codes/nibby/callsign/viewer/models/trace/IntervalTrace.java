@@ -5,19 +5,19 @@ import java.util.Map;
 
 public final class IntervalTrace extends Trace {
 
-    private final long startTimeNs;
-    private final long endTimeNs;
+    private final long startTimeMs;
+    private final long endTimeMs;
 
     public IntervalTrace(
         @Nullable Map<String, String> attributesAtStart,
         @Nullable Map<String, String> attributesAtEnd,
-        long startTimeNs,
-        long endTimeNs
+        long startTimeMs,
+        long endTimeMs
     ) {
         super(coalesceAttributes(attributesAtStart, attributesAtEnd));
 
-        this.startTimeNs = startTimeNs;
-        this.endTimeNs = endTimeNs;
+        this.startTimeMs = startTimeMs;
+        this.endTimeMs = endTimeMs;
     }
 
     private static Map<String, String> coalesceAttributes(
@@ -41,11 +41,11 @@ public final class IntervalTrace extends Trace {
         return attributesAtEnd;
     }
 
-    public long getStartTimeNs() {
-        return startTimeNs;
+    public long getStartTimeMs() {
+        return startTimeMs;
     }
 
-    public long getEndTimeNs() {
-        return endTimeNs;
+    public long getEndTimeMs() {
+        return endTimeMs;
     }
 }
