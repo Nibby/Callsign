@@ -3,7 +3,7 @@ package codes.nibby.callsign.viewer.ui.view;
 import javax.annotation.Nullable;
 import java.text.DateFormat;
 
-public interface TraceViewPerspective {
+public interface TraceViewViewport {
 
     double getGutterWidth();
 

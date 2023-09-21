@@ -24,7 +24,7 @@ public final class TraceViewContentPane {
 
     private final TraceViewToolbar toolbar;
 
-    private final TraceViewPerspectiveManager perspective;
+    private final TraceViewViewportManager viewport;
     private final TraceViewTraceContentGenerator contentGenerator;
     private final TraceViewDisplayOptions displayOptions;
 
@@ -48,7 +48,7 @@ public final class TraceViewContentPane {
 
         displayOptions = new TraceViewDisplayOptions();
         contentGenerator = new TraceViewTraceContentGenerator();
-        perspective = new TraceViewPerspectiveManager();
+        viewport = new TraceViewViewportManager();
 
         canvas = new TraceViewCanvas();
         canvas.setOnScroll(this::handleCanvasScroll);
@@ -67,7 +67,7 @@ public final class TraceViewContentPane {
         canvasVerticalScroll.setUnitIncrement(30);
         canvasVerticalScroll.setBlockIncrement(100);
         canvasVerticalScroll.valueProperty().addListener(event -> {
-            perspective.setDisplayOffsetY(canvasVerticalScroll.getValue());
+            viewport.setDisplayOffsetY(canvasVerticalScroll.getValue());
             refreshContent();
         });
         canvasContent.setRight(canvasVerticalScroll);
@@ -79,7 +79,7 @@ public final class TraceViewContentPane {
         canvasHorizontalScroll.setValue(0);
         canvasHorizontalScroll.setDisable(true);
         canvasHorizontalScroll.valueProperty().addListener(event -> {
-            perspective.setDisplayOffsetTimeMs((long) canvasHorizontalScroll.getValue());
+            viewport.setDisplayOffsetTimeMs((long) canvasHorizontalScroll.getValue());
             refreshContent();
         });
         BorderPane horizontalScrollPane = new BorderPane();
@@ -116,8 +116,8 @@ public final class TraceViewContentPane {
     private void handleHorizontalZoomLevelChanged(HorizontalZoom newZoomLevel) {
         Preconditions.checkNotNull(newZoomLevel);
 
-        if (!Objects.equals(newZoomLevel, perspective.getTrackHorizontalZoom())) {
-            perspective.setZoom(newZoomLevel);
+        if (!Objects.equals(newZoomLevel, viewport.getTrackHorizontalZoom())) {
+            viewport.setZoom(newZoomLevel);
             refreshContent();
         }
     }
@@ -144,10 +144,10 @@ public final class TraceViewContentPane {
     }
 
     private void adjustZoom(double amount) {
-        HorizontalZoom currentZoom = perspective.getTrackHorizontalZoom();
+        HorizontalZoom currentZoom = viewport.getTrackHorizontalZoom();
         HorizontalZoom newZoom = currentZoom.adjust(amount);
 
-        perspective.setZoom(newZoom);
+        viewport.setZoom(newZoom);
         toolbar.notifyZoomLevelChanged(newZoom);
 
         refreshContent();
@@ -160,7 +160,7 @@ public final class TraceViewContentPane {
         long earliestEventTimeMs = document.getEarliestEventStartTimeMs();
         long latestEventTimeMs = document.getLatestEventEndTimeMs();
 
-        boolean viewportChanged = perspective.applyProperties(totalWidth, totalHeight, earliestEventTimeMs, latestEventTimeMs);
+        boolean viewportChanged = viewport.applyProperties(totalWidth, totalHeight, earliestEventTimeMs, latestEventTimeMs);
 
         @Nullable TraceContent traces;
 
@@ -168,8 +168,8 @@ public final class TraceViewContentPane {
 
         if (binningAttributeName != null) {
             if (viewportChanged) {
-                long displayedEarliestTimeMs = perspective.getDisplayedEarliestEventTimeMs();
-                long displayedLatestTimeMs = perspective.getDisplayedLatestEventTimeMs();
+                long displayedEarliestTimeMs = viewport.getDisplayedEarliestEventTimeMs();
+                long displayedLatestTimeMs = viewport.getDisplayedLatestEventTimeMs();
 
                 TraceFilters filters = displayOptions.getFilters();
                 filters.setDisplayedTimeInterval(displayedEarliestTimeMs, displayedLatestTimeMs);
@@ -184,7 +184,7 @@ public final class TraceViewContentPane {
             traces = null;
         }
 
-        canvas.paint(perspective, traces, displayOptions);
+        canvas.paint(viewport, traces, displayOptions);
     }
 
     private void updateScrollbars(TraceContent traces) {
@@ -202,7 +202,7 @@ public final class TraceViewContentPane {
             canScroll = false;
         } else {
             long totalTimeIntervalNs = latestTimeMs - earliestTimeMs;
-            long displayedTimeIntervalNs = perspective.getDisplayedLatestEventTimeMs() - perspective.getDisplayedEarliestEventTimeMs();
+            long displayedTimeIntervalNs = viewport.getDisplayedLatestEventTimeMs() - viewport.getDisplayedEarliestEventTimeMs();
 
             canScroll = totalTimeIntervalNs - displayedTimeIntervalNs > 0;
 
@@ -227,8 +227,8 @@ public final class TraceViewContentPane {
     }
 
     private void updateVerticalScrollbar(TraceContent traces) {
-        double totalViewableHeight = traces.getDisplayData().getTotalBands() * perspective.getTrackBandHeight();
-        double viewportHeight = perspective.getViewportHeight();
+        double totalViewableHeight = traces.getDisplayData().getTotalBands() * viewport.getTrackBandHeight();
+        double viewportHeight = viewport.getViewportHeight();
 
         boolean canScroll = (totalViewableHeight - viewportHeight) > 0;
 

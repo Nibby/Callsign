@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-final class TraceViewPerspectiveManager implements TraceViewPerspective {
+final class TraceViewViewportManager implements TraceViewViewport {
 
     private static final int HEIGHT_RESERVED_FOR_TIMELINE_DISPLAY = 45;
 

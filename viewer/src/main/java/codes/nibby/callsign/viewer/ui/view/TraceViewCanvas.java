@@ -23,13 +23,13 @@ final class TraceViewCanvas extends Canvas {
         this.graphics = getGraphicsContext2D();
     }
 
-    public void paint(TraceViewPerspective perspective, @Nullable TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    public void paint(TraceViewViewport viewport, @Nullable TraceContent traces, TraceViewDisplayOptions displayOptions) {
         paintBackground(displayOptions.getColorScheme());
 
         if (traces != null) {
-            paintContent(perspective, traces, displayOptions);
-            paintGutter(perspective, traces, displayOptions);
-            paintTimelineIndicatorHeaders(perspective, displayOptions);
+            paintContent(viewport, traces, displayOptions);
+            paintGutter(viewport, traces, displayOptions);
+            paintTimelineIndicatorHeaders(viewport, displayOptions);
         }
     }
 
@@ -38,31 +38,31 @@ final class TraceViewCanvas extends Canvas {
         graphics.fillRect(0, 0, getWidth(), getHeight());
     }
 
-    private void paintContent(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    private void paintContent(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         graphics.setFill(displayOptions.getColorScheme().getContentRowBackground());
-        graphics.fillRect(perspective.getViewportStartX(), perspective.getViewportStartY(), perspective.getViewportWidth(), perspective.getViewportHeight());
+        graphics.fillRect(viewport.getViewportStartX(), viewport.getViewportStartY(), viewport.getViewportWidth(), viewport.getViewportHeight());
 
-        paintTraceBackground(perspective, traces, displayOptions);
-        paintTimelineIndicatorLinesInContent(perspective, displayOptions);
-        paintTraces(perspective, traces, displayOptions);
+        paintTraceBackground(viewport, traces, displayOptions);
+        paintTimelineIndicatorLinesInContent(viewport, displayOptions);
+        paintTraces(viewport, traces, displayOptions);
     }
 
-    private void paintTraceBackground(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    private void paintTraceBackground(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
         graphics.setFill(colorScheme.getContentBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
         TraceContent.DisplayData displayData = traces.getDisplayData();
-        double yStart = perspective.getViewportStartY() - perspective.getDisplayOffsetY();
+        double yStart = viewport.getViewportStartY() - viewport.getDisplayOffsetY();
 
-        int startBandIndex = Math.max(0, (int) Math.floor(perspective.getDisplayOffsetY() / perspective.getTrackBandHeight()) - 2);
+        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getDisplayOffsetY() / viewport.getTrackBandHeight()) - 2);
 
         int endBandIndex = Math.min(
             displayData.getTotalBands(),
-            startBandIndex + (int) Math.ceil((perspective.getViewportHeight() + perspective.getTimelineIndicatorHeight()) / perspective.getTrackBandHeight()) + 2
+            startBandIndex + (int) Math.ceil((viewport.getViewportHeight() + viewport.getTimelineIndicatorHeight()) / viewport.getTrackBandHeight()) + 2
         );
 
-        yStart += startBandIndex * perspective.getTrackBandHeight();
+        yStart += startBandIndex * viewport.getTrackBandHeight();
 
         for (int cumulativeBandIndex = startBandIndex; cumulativeBandIndex < endBandIndex; cumulativeBandIndex++) {
             Optional<TraceContent.DisplayData.TrackDisplayData> trackDisplayDataOptional = displayData.getTrackDataFromCumulativeBandIndex(cumulativeBandIndex);
@@ -77,52 +77,52 @@ final class TraceViewCanvas extends Canvas {
             boolean isAlternateRow = displayIndex % 2 == 1;
 
             graphics.setFill(isAlternateRow ? colorScheme.getContentAlternateRowBackground() : colorScheme.getContentRowBackground());
-            graphics.fillRect(perspective.getViewportStartX(), yStart, perspective.getViewportWidth(), perspective.getTrackBandHeight());
+            graphics.fillRect(viewport.getViewportStartX(), yStart, viewport.getViewportWidth(), viewport.getTrackBandHeight());
 
-            yStart += perspective.getTrackBandHeight();
+            yStart += viewport.getTrackBandHeight();
         }
     }
 
-    private void paintTimelineIndicatorLinesInContent(TraceViewPerspective perspective, TraceViewDisplayOptions displayOptions) {
+    private void paintTimelineIndicatorLinesInContent(TraceViewViewport viewport, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
         graphics.setFill(colorScheme.getTimelineIndicatorLinesInContentForeground());
 
-        var x = perspective.getViewportStartX();
-        var y = perspective.getViewportStartY();
-        var height = perspective.getViewportHeight();
+        var x = viewport.getViewportStartX();
+        var y = viewport.getViewportStartY();
+        var height = viewport.getViewportHeight();
 
-        TraceViewPerspective.MajorTickIncrementDescriptor majorTickDescriptor = perspective.getTimelineMajorTickDescriptor();
-        long startTime = perspective.getTimeMsFromDisplayX(0);
+        TraceViewViewport.MajorTickIncrementDescriptor majorTickDescriptor = viewport.getTimelineMajorTickDescriptor();
+        long startTime = viewport.getTimeMsFromDisplayX(0);
         long startTimeExcess = startTime % majorTickDescriptor.timeMs();
         if (startTimeExcess != 0) {
             startTime -= startTimeExcess;
         }
 
-        long endTime = perspective.getTimeMsFromDisplayX(getWidth() / 6 * 7);
+        long endTime = viewport.getTimeMsFromDisplayX(getWidth() / 6 * 7);
         long endTimeExcess = endTime % majorTickDescriptor.timeMs();
         if (endTimeExcess != 0) {
             endTime += (majorTickDescriptor.timeMs() - endTimeExcess);
         }
 
         for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.timeMs()) {
-            double majorTickX = perspective.getDisplayX(timeMs);
+            double majorTickX = viewport.getDisplayX(timeMs);
             graphics.fillRect(x + majorTickX, y, 1, height);
         }
     }
 
-    private void paintTraces(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    private void paintTraces(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceContent.DisplayData displayData = traces.getDisplayData();
         Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
-        double yStart = perspective.getViewportStartY() - perspective.getDisplayOffsetY();
+        double yStart = viewport.getViewportStartY() - viewport.getDisplayOffsetY();
 
-        int startBandIndex = Math.max(0, (int) Math.floor(perspective.getDisplayOffsetY() / perspective.getTrackBandHeight()) - 2);
+        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getDisplayOffsetY() / viewport.getTrackBandHeight()) - 2);
 
         int endBandIndex = Math.min(
             displayData.getTotalBands(),
-            startBandIndex + (int) Math.ceil((perspective.getViewportHeight() + perspective.getTimelineIndicatorHeight()) / perspective.getTrackBandHeight()) + 2
+            startBandIndex + (int) Math.ceil((viewport.getViewportHeight() + viewport.getTimelineIndicatorHeight()) / viewport.getTrackBandHeight()) + 2
         );
 
-        yStart += startBandIndex * perspective.getTrackBandHeight();
+        yStart += startBandIndex * viewport.getTrackBandHeight();
 
         for (int cumulativeBandIndex = startBandIndex; cumulativeBandIndex < endBandIndex; cumulativeBandIndex++) {
             Optional<TraceContent.DisplayData.TrackDisplayData> trackDisplayDataOptional = displayData.getTrackDataFromCumulativeBandIndex(cumulativeBandIndex);
@@ -141,20 +141,20 @@ final class TraceViewCanvas extends Canvas {
             }
 
             List<Trace> bandTraces = trackData.getTraces(cumulativeBandIndex - trackDisplayData.cumulativeBandDisplayIndexStart());
-            paintTraceBand(perspective, bandTraces, displayOptions, yStart);
+            paintTraceBand(viewport, bandTraces, displayOptions, yStart);
 
-            yStart += perspective.getTrackBandHeight();
+            yStart += viewport.getTrackBandHeight();
         }
     }
 
     private void paintTraceBand(
-        TraceViewPerspective perspective,
+        TraceViewViewport viewport,
         List<Trace> bandTraces,
         TraceViewDisplayOptions displayOptions,
         double yStart
     ) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
-        double bandHeight = perspective.getTrackBandHeight();
+        double bandHeight = viewport.getTrackBandHeight();
 
         List<InstantTrace> instantTraces = new ArrayList<>();
 
@@ -164,8 +164,8 @@ final class TraceViewCanvas extends Canvas {
 
         for (Trace trace : bandTraces) {
             if (displayOptions.isShowIntervalTraces() && trace instanceof IntervalTrace intervalTrace) {
-                double xStart = perspective.getDisplayX(intervalTrace.getStartTimeMs());
-                double width = perspective.getDisplayWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
+                double xStart = viewport.getDisplayX(intervalTrace.getStartTimeMs());
+                double width = viewport.getDisplayWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
 
                 graphics.setFill(colorScheme.getIntervalTraceEventBackground());
                 graphics.fillRect(xStart, yStart + 6, width, bandHeight - 12);
@@ -180,7 +180,7 @@ final class TraceViewCanvas extends Canvas {
 
         if (displayOptions.isShowInstantTraces()) {
             for (InstantTrace instantTrace : instantTraces) {
-                double xStart = perspective.getDisplayX(instantTrace.getTimeMs());
+                double xStart = viewport.getDisplayX(instantTrace.getTimeMs());
                 double size = bandHeight - 18;
 
                 graphics.setFill(colorScheme.getInstantTraceEventBackground());
@@ -192,15 +192,15 @@ final class TraceViewCanvas extends Canvas {
         }
     }
 
-    private void paintGutter(TraceViewPerspective perspective, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    private void paintGutter(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
 
         graphics.setFill(colorScheme.getGutterBackground());
-        graphics.fillRect(0, 0, perspective.getGutterWidth(), getHeight());
+        graphics.fillRect(0, 0, viewport.getGutterWidth(), getHeight());
 
         Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
         int trackIndex = 0;
-        double yStart = perspective.getViewportStartY() - perspective.getDisplayOffsetY();
+        double yStart = viewport.getViewportStartY() - viewport.getDisplayOffsetY();
 
         for (TraceTrack track : trackDatum.keySet()) {
             @Nullable TrackData trackData = trackDatum.get(track);
@@ -209,17 +209,17 @@ final class TraceViewCanvas extends Canvas {
                 continue;
             }
 
-            yStart = paintTraceTrackGutter(perspective, trackIndex, track, trackData.getBandCount(), colorScheme, yStart);
+            yStart = paintTraceTrackGutter(viewport, trackIndex, track, trackData.getBandCount(), colorScheme, yStart);
 
             trackIndex++;
         }
     }
 
-    private void paintTimelineIndicatorHeaders(TraceViewPerspective perspective, TraceViewDisplayOptions displayOptions) {
+    private void paintTimelineIndicatorHeaders(TraceViewViewport viewport, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
 
-        var x = perspective.getViewportStartX();
-        var height = perspective.getTimelineIndicatorHeight();
+        var x = viewport.getViewportStartX();
+        var height = viewport.getTimelineIndicatorHeight();
 
         final int borderHeight = 1;
         final int majorTickHeight = 5;
@@ -233,21 +233,21 @@ final class TraceViewCanvas extends Canvas {
         // Major ticks
         graphics.setFill(colorScheme.getTimelineMajorTick());
 
-        TraceViewPerspective.MajorTickIncrementDescriptor majorTickDescriptor = perspective.getTimelineMajorTickDescriptor();
-        long startTime = perspective.getTimeMsFromDisplayX(0);
+        TraceViewViewport.MajorTickIncrementDescriptor majorTickDescriptor = viewport.getTimelineMajorTickDescriptor();
+        long startTime = viewport.getTimeMsFromDisplayX(0);
         long startTimeExcess = startTime % majorTickDescriptor.timeMs();
         if (startTimeExcess != 0) {
             startTime -= startTimeExcess;
         }
 
-        long endTime = perspective.getTimeMsFromDisplayX(getWidth() / 6 * 7);
+        long endTime = viewport.getTimeMsFromDisplayX(getWidth() / 6 * 7);
         long endTimeExcess = endTime % majorTickDescriptor.timeMs();
         if (endTimeExcess != 0) {
             endTime += (majorTickDescriptor.timeMs() - endTimeExcess);
         }
 
         for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.timeMs()) {
-            double majorTickX = perspective.getDisplayX(timeMs);
+            double majorTickX = viewport.getDisplayX(timeMs);
             graphics.fillRect(x + majorTickX, height - borderHeight - majorTickHeight, 1, majorTickHeight);
 
             String dateText = null, timeText = null;
@@ -286,17 +286,17 @@ final class TraceViewCanvas extends Canvas {
     }
 
     private double paintTraceTrackGutter(
-        TraceViewPerspective perspective,
+        TraceViewViewport viewport,
         int trackIndex,
         TraceTrack track,
         int bandCount,
         TraceViewColorScheme colorScheme,
         double yStart
     ) {
-        double totalTrackHeight = perspective.getTrackBandHeight() * bandCount;
+        double totalTrackHeight = viewport.getTrackBandHeight() * bandCount;
 
         graphics.setFill(trackIndex % 2 == 0 ? colorScheme.getGutterRowBackground() : colorScheme.getGutterAlternateRowBackground());
-        graphics.fillRect(0, yStart, perspective.getGutterWidth(), totalTrackHeight);
+        graphics.fillRect(0, yStart, viewport.getGutterWidth(), totalTrackHeight);
 
         graphics.setFill(Color.WHITE);
         graphics.setFontSmoothingType(FontSmoothingType.GRAY);
@@ -309,7 +309,7 @@ final class TraceViewCanvas extends Canvas {
         var binningInfoText = new Text(binningInfo);
         binningInfoText.setFont(font);
 
-        graphics.fillText(binningInfo, perspective.getGutterWidth() - 5 - binningInfoText.getBoundsInLocal().getWidth(), yStart + 20);
+        graphics.fillText(binningInfo, viewport.getGutterWidth() - 5 - binningInfoText.getBoundsInLocal().getWidth(), yStart + 20);
 
         yStart += totalTrackHeight;
 
