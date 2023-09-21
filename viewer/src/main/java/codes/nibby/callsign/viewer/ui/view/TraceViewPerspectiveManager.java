@@ -53,47 +53,47 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
     }
 
     static {
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 1, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 2, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 3, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 4, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 5, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 6, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 7, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 14, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 30, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 14, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 7, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 6, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 5, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 4, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 3, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 2, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.DAYS, 1, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
 
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 1, null, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 2, null, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 3, null, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 4, null, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 5, null, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 6, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 12, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 6, DATE_FORMAT_DD_MM_YY, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 5, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 4, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 3, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 2, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.HOURS, 1, null, TIME_FORMAT_HH_MM));
 
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 1, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 2, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 5, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 10, null, TIME_FORMAT_HH_MM));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 20, null, TIME_FORMAT_HH_MM));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 30, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 20, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 10, null, TIME_FORMAT_HH_MM));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 5, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 2, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MINUTES, 1, null, TIME_FORMAT_HH_MM_SS));
 
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 1, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 2, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 5, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 10, null, TIME_FORMAT_HH_MM_SS));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 20, null, TIME_FORMAT_HH_MM_SS));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 30, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 20, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 10, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 5, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 2, null, TIME_FORMAT_HH_MM_SS));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.SECONDS, 1, null, TIME_FORMAT_HH_MM_SS));
 
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 1, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 2, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 5, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 10, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 20, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 50, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 100, null, TIME_FORMAT_HH_MM_SS_MILLI));
-        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 200, null, TIME_FORMAT_HH_MM_SS_MILLI));
         SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 500, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 200, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 100, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 50, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 20, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 10, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 5, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 2, null, TIME_FORMAT_HH_MM_SS_MILLI));
+        SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.add(new MajorTickIncrementType(TimeUnit.MILLISECONDS, 1, null, TIME_FORMAT_HH_MM_SS_MILLI));
     }
 
     /**
@@ -139,21 +139,17 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
         }
 
         if (displayTimeRangeChanged) {
-            double totalDisplayableTimeMs = trackHorizontalZoom.measureTimeMs(viewportWidth);
-            this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor(totalDisplayableTimeMs);
+            this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor();
         }
 
         return firstCompute || totalTimeRangeChanged || displayTimeRangeChanged;
     }
 
-    private MajorTickIncrementDescriptor computeTimelineMajorTickDescriptor(double displayedTimeRange) {
+    private MajorTickIncrementDescriptor computeTimelineMajorTickDescriptor() {
         Text measurement = new Text("XX:XX:XX.XXX");
         double width = measurement.getBoundsInLocal().getWidth();
-        double minimumTimeMsIncrement = trackHorizontalZoom.measureTimeMs(width / 3 * 7);
+        double minimumTimeMsIncrement = trackHorizontalZoom.measureTimeMs(width / 3 * 4);
 
-        final int idealDisplayedTickCount = 8;
-
-        int bestCandidateDisplayedTickCount = -1;
         MajorTickIncrementType bestCandidate = null;
 
         for (int i = SUPPORTED_MAJOR_TICK_INCREMENT_COMBINATIONS.size() - 1; i >= 0; i--) {
@@ -164,14 +160,8 @@ final class TraceViewPerspectiveManager implements TraceViewPerspective {
                 continue;
             }
 
-            int displayedTickCount = (int) (Math.floor(displayedTimeRange / unitTimeMs));
-
-            if (displayedTickCount < 4) {
-                continue;
-            } else if (bestCandidate == null || Math.abs(idealDisplayedTickCount - displayedTickCount) < bestCandidateDisplayedTickCount ){
-                bestCandidate = majorTickType;
-                bestCandidateDisplayedTickCount = displayedTickCount;
-            }
+            bestCandidate = majorTickType;
+            break;
         }
 
         if (bestCandidate != null) {

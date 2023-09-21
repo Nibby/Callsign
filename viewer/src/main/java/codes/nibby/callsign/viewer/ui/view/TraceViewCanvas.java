@@ -77,7 +77,7 @@ final class TraceViewCanvas extends Canvas {
             boolean isAlternateRow = displayIndex % 2 == 1;
 
             graphics.setFill(isAlternateRow ? colorScheme.getContentAlternateRowBackground() : colorScheme.getContentRowBackground());
-            graphics.fillRect(perspective.getViewportStartX(), yStart, perspective.getViewportWidth(), perspective.getViewportHeight());
+            graphics.fillRect(perspective.getViewportStartX(), yStart, perspective.getViewportWidth(), perspective.getTrackBandHeight());
 
             yStart += perspective.getTrackBandHeight();
         }
