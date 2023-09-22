@@ -4,6 +4,7 @@ import codes.nibby.callsign.viewer.models.trace.InstantTrace;
 import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
 import codes.nibby.callsign.viewer.models.trace.Trace;
 import codes.nibby.callsign.viewer.models.trace.TraceTrack;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -40,7 +41,9 @@ final class TraceViewCanvas extends Canvas {
 
     private void paintContent(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         graphics.setFill(displayOptions.getColorScheme().getContentRowBackground());
-        graphics.fillRect(viewport.getViewportStartX(), viewport.getViewportStartY(), viewport.getViewportWidth(), viewport.getViewportHeight());
+
+        Rectangle2D contentBounds = viewport.getTrackContentBounds();
+        graphics.fillRect(contentBounds.getMinX(), contentBounds.getMinY(), contentBounds.getWidth(), contentBounds.getHeight());
 
         paintTraceBackground(viewport, traces, displayOptions);
         paintTimelineIndicatorLinesInContent(viewport, displayOptions);
@@ -49,17 +52,21 @@ final class TraceViewCanvas extends Canvas {
 
     private void paintTraceBackground(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
+
+        Rectangle2D contentBounds = viewport.getTrackContentBounds();
+        Rectangle2D timelineBounds = viewport.getTimelineBounds();
+
         graphics.setFill(colorScheme.getContentBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
         TraceContent.DisplayData displayData = traces.getDisplayData();
-        double yStart = viewport.getViewportStartY() - viewport.getDisplayOffsetY();
+        double yStart = contentBounds.getMinY() - viewport.getTrackContentOffsetY();
 
-        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getDisplayOffsetY() / viewport.getTrackBandHeight()) - 2);
+        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getTrackContentOffsetY() / viewport.getTrackBandHeight()) - 2);
 
         int endBandIndex = Math.min(
             displayData.getTotalBands(),
-            startBandIndex + (int) Math.ceil((viewport.getViewportHeight() + viewport.getTimelineIndicatorHeight()) / viewport.getTrackBandHeight()) + 2
+            startBandIndex + (int) Math.ceil((contentBounds.getHeight() + timelineBounds.getHeight()) / viewport.getTrackBandHeight()) + 2
         );
 
         yStart += startBandIndex * viewport.getTrackBandHeight();
@@ -77,7 +84,7 @@ final class TraceViewCanvas extends Canvas {
             boolean isAlternateRow = displayIndex % 2 == 1;
 
             graphics.setFill(isAlternateRow ? colorScheme.getContentAlternateRowBackground() : colorScheme.getContentRowBackground());
-            graphics.fillRect(viewport.getViewportStartX(), yStart, viewport.getViewportWidth(), viewport.getTrackBandHeight());
+            graphics.fillRect(contentBounds.getMinX(), yStart, contentBounds.getWidth(), viewport.getTrackBandHeight());
 
             yStart += viewport.getTrackBandHeight();
         }
@@ -87,25 +94,27 @@ final class TraceViewCanvas extends Canvas {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
         graphics.setFill(colorScheme.getTimelineIndicatorLinesInContentForeground());
 
-        var x = viewport.getViewportStartX();
-        var y = viewport.getViewportStartY();
-        var height = viewport.getViewportHeight();
+        Rectangle2D contentBounds = viewport.getTrackContentBounds();
 
-        TraceViewViewport.MajorTickIncrementDescriptor majorTickDescriptor = viewport.getTimelineMajorTickDescriptor();
-        long startTime = viewport.getTimeMsFromDisplayX(0);
-        long startTimeExcess = startTime % majorTickDescriptor.timeMs();
+        var x = contentBounds.getMinX();
+        var y = contentBounds.getMinY();
+        var height = contentBounds.getHeight();
+
+        TraceViewViewport.TimelineDescriptor majorTickDescriptor = viewport.getTimelineDescriptor();
+        long startTime = viewport.translateToTimeMs(0);
+        long startTimeExcess = startTime % majorTickDescriptor.getIncrementTimeMs();
         if (startTimeExcess != 0) {
             startTime -= startTimeExcess;
         }
 
-        long endTime = viewport.getTimeMsFromDisplayX(getWidth() / 6 * 7);
-        long endTimeExcess = endTime % majorTickDescriptor.timeMs();
+        long endTime = viewport.translateToTimeMs(getWidth() / 6 * 7);
+        long endTimeExcess = endTime % majorTickDescriptor.getIncrementTimeMs();
         if (endTimeExcess != 0) {
-            endTime += (majorTickDescriptor.timeMs() - endTimeExcess);
+            endTime += (majorTickDescriptor.getIncrementTimeMs() - endTimeExcess);
         }
 
-        for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.timeMs()) {
-            double majorTickX = viewport.getDisplayX(timeMs);
+        for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.getIncrementTimeMs()) {
+            double majorTickX = viewport.translateToTrackContentX(timeMs);
             graphics.fillRect(x + majorTickX, y, 1, height);
         }
     }
@@ -113,13 +122,17 @@ final class TraceViewCanvas extends Canvas {
     private void paintTraces(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceContent.DisplayData displayData = traces.getDisplayData();
         Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
-        double yStart = viewport.getViewportStartY() - viewport.getDisplayOffsetY();
 
-        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getDisplayOffsetY() / viewport.getTrackBandHeight()) - 2);
+        Rectangle2D contentBounds = viewport.getTrackContentBounds();
+        Rectangle2D timelineBounds = viewport.getTimelineBounds();
+
+        double yStart = contentBounds.getMinY() - viewport.getTrackContentOffsetY();
+
+        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getTrackContentOffsetY() / viewport.getTrackBandHeight()) - 2);
 
         int endBandIndex = Math.min(
             displayData.getTotalBands(),
-            startBandIndex + (int) Math.ceil((viewport.getViewportHeight() + viewport.getTimelineIndicatorHeight()) / viewport.getTrackBandHeight()) + 2
+            startBandIndex + (int) Math.ceil((contentBounds.getHeight() + timelineBounds.getHeight()) / viewport.getTrackBandHeight()) + 2
         );
 
         yStart += startBandIndex * viewport.getTrackBandHeight();
@@ -164,8 +177,8 @@ final class TraceViewCanvas extends Canvas {
 
         for (Trace trace : bandTraces) {
             if (displayOptions.isShowIntervalTraces() && trace instanceof IntervalTrace intervalTrace) {
-                double xStart = viewport.getDisplayX(intervalTrace.getStartTimeMs());
-                double width = viewport.getDisplayWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
+                double xStart = viewport.translateToTrackContentX(intervalTrace.getStartTimeMs());
+                double width = viewport.measureDisplayedWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
 
                 graphics.setFill(colorScheme.getIntervalTraceEventBackground());
                 graphics.fillRect(xStart, yStart + 6, width, bandHeight - 12);
@@ -180,7 +193,7 @@ final class TraceViewCanvas extends Canvas {
 
         if (displayOptions.isShowInstantTraces()) {
             for (InstantTrace instantTrace : instantTraces) {
-                double xStart = viewport.getDisplayX(instantTrace.getTimeMs());
+                double xStart = viewport.translateToTrackContentX(instantTrace.getTimeMs());
                 double size = bandHeight - 18;
 
                 graphics.setFill(colorScheme.getInstantTraceEventBackground());
@@ -194,13 +207,16 @@ final class TraceViewCanvas extends Canvas {
 
     private void paintGutter(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
+        
+        Rectangle2D trackHeaderBounds = viewport.getTrackHeaderBounds();
+        Rectangle2D trackContentBounds = viewport.getTrackContentBounds();
 
         graphics.setFill(colorScheme.getGutterBackground());
-        graphics.fillRect(0, 0, viewport.getGutterWidth(), getHeight());
+        graphics.fillRect(0, 0, trackHeaderBounds.getWidth(), getHeight());
 
         Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
         int trackIndex = 0;
-        double yStart = viewport.getViewportStartY() - viewport.getDisplayOffsetY();
+        double yStart = trackContentBounds.getMinY() - viewport.getTrackContentOffsetY();
 
         for (TraceTrack track : trackDatum.keySet()) {
             @Nullable TrackData trackData = trackDatum.get(track);
@@ -218,8 +234,11 @@ final class TraceViewCanvas extends Canvas {
     private void paintTimelineIndicatorHeaders(TraceViewViewport viewport, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
 
-        var x = viewport.getViewportStartX();
-        var height = viewport.getTimelineIndicatorHeight();
+        Rectangle2D contentBounds = viewport.getTrackContentBounds();
+        Rectangle2D timelineBounds = viewport.getTimelineBounds();
+
+        var x = contentBounds.getMinX();
+        var height = timelineBounds.getHeight();
 
         final int borderHeight = 1;
         final int majorTickHeight = 5;
@@ -233,21 +252,21 @@ final class TraceViewCanvas extends Canvas {
         // Major ticks
         graphics.setFill(colorScheme.getTimelineMajorTick());
 
-        TraceViewViewport.MajorTickIncrementDescriptor majorTickDescriptor = viewport.getTimelineMajorTickDescriptor();
-        long startTime = viewport.getTimeMsFromDisplayX(0);
-        long startTimeExcess = startTime % majorTickDescriptor.timeMs();
+        TraceViewViewport.TimelineDescriptor majorTickDescriptor = viewport.getTimelineDescriptor();
+        long startTime = viewport.translateToTimeMs(0);
+        long startTimeExcess = startTime % majorTickDescriptor.getIncrementTimeMs();
         if (startTimeExcess != 0) {
             startTime -= startTimeExcess;
         }
 
-        long endTime = viewport.getTimeMsFromDisplayX(getWidth() / 6 * 7);
-        long endTimeExcess = endTime % majorTickDescriptor.timeMs();
+        long endTime = viewport.translateToTimeMs(getWidth() / 6 * 7);
+        long endTimeExcess = endTime % majorTickDescriptor.getIncrementTimeMs();
         if (endTimeExcess != 0) {
-            endTime += (majorTickDescriptor.timeMs() - endTimeExcess);
+            endTime += (majorTickDescriptor.getIncrementTimeMs() - endTimeExcess);
         }
 
-        for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.timeMs()) {
-            double majorTickX = viewport.getDisplayX(timeMs);
+        for (long timeMs = startTime; timeMs < endTime; timeMs += majorTickDescriptor.getIncrementTimeMs()) {
+            double majorTickX = viewport.translateToTrackContentX(timeMs);
             graphics.fillRect(x + majorTickX, height - borderHeight - majorTickHeight, 1, majorTickHeight);
 
             String dateText = null, timeText = null;
@@ -294,9 +313,10 @@ final class TraceViewCanvas extends Canvas {
         double yStart
     ) {
         double totalTrackHeight = viewport.getTrackBandHeight() * bandCount;
+        Rectangle2D trackHeaderBounds = viewport.getTrackHeaderBounds();
 
         graphics.setFill(trackIndex % 2 == 0 ? colorScheme.getGutterRowBackground() : colorScheme.getGutterAlternateRowBackground());
-        graphics.fillRect(0, yStart, viewport.getGutterWidth(), totalTrackHeight);
+        graphics.fillRect(0, yStart, trackHeaderBounds.getWidth(), totalTrackHeight);
 
         graphics.setFill(Color.WHITE);
         graphics.setFontSmoothingType(FontSmoothingType.GRAY);
@@ -309,7 +329,7 @@ final class TraceViewCanvas extends Canvas {
         var binningInfoText = new Text(binningInfo);
         binningInfoText.setFont(font);
 
-        graphics.fillText(binningInfo, viewport.getGutterWidth() - 5 - binningInfoText.getBoundsInLocal().getWidth(), yStart + 20);
+        graphics.fillText(binningInfo, trackHeaderBounds.getWidth() - 5 - binningInfoText.getBoundsInLocal().getWidth(), yStart + 20);
 
         yStart += totalTrackHeight;
 

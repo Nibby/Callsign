@@ -67,7 +67,7 @@ public final class TraceViewContentPane {
         canvasVerticalScroll.setUnitIncrement(30);
         canvasVerticalScroll.setBlockIncrement(100);
         canvasVerticalScroll.valueProperty().addListener(event -> {
-            viewport.setDisplayOffsetY(canvasVerticalScroll.getValue());
+            viewport.setTrackContentOffsetY(canvasVerticalScroll.getValue());
             refreshContent();
         });
         canvasContent.setRight(canvasVerticalScroll);
@@ -79,7 +79,7 @@ public final class TraceViewContentPane {
         canvasHorizontalScroll.setValue(0);
         canvasHorizontalScroll.setDisable(true);
         canvasHorizontalScroll.valueProperty().addListener(event -> {
-            viewport.setDisplayOffsetTimeMs((long) canvasHorizontalScroll.getValue());
+            viewport.setTrackContentTimeOffsetMs((long) canvasHorizontalScroll.getValue());
             refreshContent();
         });
         BorderPane horizontalScrollPane = new BorderPane();
@@ -228,15 +228,15 @@ public final class TraceViewContentPane {
 
     private void updateVerticalScrollbar(TraceContent traces) {
         double totalViewableHeight = traces.getDisplayData().getTotalBands() * viewport.getTrackBandHeight();
-        double viewportHeight = viewport.getViewportHeight();
+        double traceContentHeight = viewport.getTrackContentBounds().getHeight();
 
-        boolean canScroll = (totalViewableHeight - viewportHeight) > 0;
+        boolean canScroll = (totalViewableHeight - traceContentHeight) > 0;
 
         canvasVerticalScroll.setDisable(!canScroll);
 
         if (canScroll) {
-            var totalAmountScrollable = totalViewableHeight - viewportHeight;
-            var visibleAmount = (viewportHeight / totalViewableHeight) * totalAmountScrollable;
+            var totalAmountScrollable = totalViewableHeight - traceContentHeight;
+            var visibleAmount = (traceContentHeight / totalViewableHeight) * totalAmountScrollable;
 
             canvasVerticalScroll.setMax(totalAmountScrollable);
             canvasVerticalScroll.setVisibleAmount(visibleAmount);

@@ -1,70 +1,126 @@
 package codes.nibby.callsign.viewer.ui.view;
 
+import javafx.geometry.Rectangle2D;
+
 import javax.annotation.Nullable;
 import java.text.DateFormat;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Specifies visual layout parameters for drawing content in trace view canvas. In addition, the
+ * component provides API to translate on-screen position to logical time position
+ * (accounting for horizontal zoom factor) and vice-versa.
+ * <p/>
+ * Visually, the trace view content area consists of zero or more tracks laid out horizontally in
+ * some specified order. Each track has a header area to display metadata such as track name, as
+ * well as a track content area to display traces for the track. On top of this, there are time
+ * reference ticks drawn above the trace content area. This component manages the boundaries for
+ * each major visual component.
+ */
 public interface TraceViewViewport {
 
-    double getGutterWidth();
-
-    double getDividerSize();
-
-    double getViewportStartY();
-
-    double getViewportStartX();
-
     /**
-     * @return Width (in pixels) of the viewable region on screen.
-     */
-    double getViewportWidth();
-
-    /**
-     * @return Height (in pixels) of the viewable region on screen.
-     */
-    double getViewportHeight();
-
-    /**
-     * The real height of a track is computed dynamically by {@link TraceViewTraceContentGenerator} and its related
-     * classes depending on the number of overlapping interval traces.
-     * <p/>
-     * Method of this method is the bare minimum height a track must occupy.
+     * This width value defines the area where the mouse can resize the
+     * {@link #getTrackHeaderBounds() track header width} through dragging.
      *
-     * @return Minimum height, in pixels, of a track.
+     * @return Width, in pixels, of the divider between the track header area and viewport content.
+     */
+    double getTrackHeaderDividerWidth();
+
+    /**
+     * @return Bounds allocated to displaying track header area on the canvas.
+     */
+    Rectangle2D getTrackHeaderBounds();
+
+    /**
+     * @return Bounds allocated to displaying track content on the canvas.
+     */
+    Rectangle2D getTrackContentBounds();
+
+    /**
+     * @return Bounds allocated to displaying time ticker information on the canvas.
+     */
+    Rectangle2D getTimelineBounds();
+
+    /**
+     * The real height of a track is computed dynamically by {@link TraceViewTraceContentGenerator}
+     * (and its related classes) depending on the number of overlapping interval traces. A track
+     * consists of one or more bands, where each band contains enough space to display a single
+     * trace.
+     * <p/>
+     * The thickness (or height) of a trace on screen is computed based on this number.
+     *
+     * @return Height of a single track band, in pixels.
      */
     double getTrackBandHeight();
 
     /**
+     * Translates event time (in milliseconds) to the displayed x-position on screen.
+     * <p/>
+     * This method returns a pixel value relative to the {@link #getTrackContentBounds() track
+     * content bounds}. In other words, if {@code timeMs} is the earliest displayable time on-screen,
+     * this method returns {@code getTrackContentBounds().x}. Naturally, this method accounts for
+     * the horizontal scroll offset.
+     * <p/>
+     * If the supplied time is less than the earliest displayed time on screen, this method returns
+     * -1. Otherwise, if the time is greater than the maximum displayed time, returns
+     * {@code getTrackContentBounds().width + 1}.
      *
-     * @return Height, in pixels, of the component painting timeline markers
-     */
-    double getTimelineIndicatorHeight();
-
-    /**
-     * Converts time (in milliseconds) to the displayed x-position on screen. If the time is less
-     * than the earliest displayed time, returns -1. Or if the time is greater than the latest
-     * displayed time, returns {@code getViewportWidth() + 1}.
+     * @param timeMs Time to convert to x-position on screen.
      *
-     * @param timeMs Time to convert to x-position on screen
      * @return x-position of the time
      */
-    double getDisplayX(long timeMs);
+    double translateToTrackContentX(long timeMs);
 
     /**
-     * Converts a display x-position to the corresponding time on the event timeline, accounting
-     * for factors such as horizontal scroll offset and zoom factor.
+     * Translates pixel x-position to its corresponding time on the event timeline, accounting
+     * for factors such as horizontal scroll offset and zoom.
      *
-     * @param displayX The displayed x-position to convert
+     * @param trackContentX The displayed x-position to convert
      * @return Time (in milliseconds) represented on the x-position on screen
      */
-    long getTimeMsFromDisplayX(double displayX);
+    long translateToTimeMs(double trackContentX);
 
-    double getDisplayOffsetY();
+    /**
+     * @return Current vertical scroll offset for track content, in pixels.
+     */
+    double getTrackContentOffsetY();
 
-    double getDisplayWidth(long timeDurationNs);
+    /**
+     * @param timeDurationMs Time duration to be measured.
+     *
+     * @return Time duration translated as a measurement of pixel width on screen, given the
+     *         current horizontal zoom.
+     */
+    double measureDisplayedWidth(long timeDurationMs);
 
-    MajorTickIncrementDescriptor getTimelineMajorTickDescriptor();
+    /**
+     * @return Parameters related to the display of time indicators on the trace content timeline.
+     */
+    TimelineDescriptor getTimelineDescriptor();
 
-    record MajorTickIncrementDescriptor(long timeMs, @Nullable DateFormat dateFormat, @Nullable DateFormat timeFormat) {
 
+    /**
+     * Describes how major ticks should be displayed on the trace content timeline.
+     *
+     * @param amount Time interval value
+     * @param unit Time unit
+     * @param dateFormat Date display format
+     * @param timeFormat Time display format
+     */
+    record TimelineDescriptor(
+        int amount,
+        TimeUnit unit,
+        @Nullable DateFormat dateFormat,
+        @Nullable DateFormat timeFormat
+    ) {
+
+        /**
+         * @return Total increment time in milliseconds between each major tick
+         */
+        public long getIncrementTimeMs() {
+            return unit.toMillis(amount);
+        }
     }
+
 }

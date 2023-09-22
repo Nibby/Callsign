@@ -9,7 +9,7 @@ import java.util.Map;
 
 final class ViewerApplicationControllerImpl implements ViewerApplicationController {
 
-    private ViewerApplication application;
+    private final ViewerApplication application;
     private final Map<TraceDocument, TraceViewWindow> openWindows = new HashMap<>();
 
     ViewerApplicationControllerImpl(ViewerApplication application) {
@@ -50,7 +50,11 @@ final class ViewerApplicationControllerImpl implements ViewerApplicationControll
         openWindows.remove(document);
 
         if (openWindows.isEmpty()) {
-            application.showLandingScreen();
+            if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+                application.showLandingScreen();
+            } else {
+                System.exit(0);
+            }
         }
     }
 }

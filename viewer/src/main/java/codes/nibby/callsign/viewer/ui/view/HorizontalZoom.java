@@ -13,7 +13,6 @@ public final class HorizontalZoom {
     // Rest of the program measures time in milliseconds, but the concept is identical.
     private static final double MS_PER_PIXEL_AT_100_PERCENT_ZOOM = 20;
 
-
     public final double value;
 
     private HorizontalZoom(double value) {
@@ -22,18 +21,40 @@ public final class HorizontalZoom {
         this.value = value;
     }
 
+    /**
+     * @return Number of milliseconds represented by each pixel on screen.
+     */
     public double msPerPixel() {
         return MS_PER_PIXEL_AT_100_PERCENT_ZOOM / value;
     }
 
-    public double measurePixels(long timeDurationNs) {
-        return Math.ceil(timeDurationNs / msPerPixel());
+    /**
+     * Converts a time interval to pixel width under this zoom factor.
+     *
+     * @param timeDurationMs Time (in milliseconds) to measure
+     * @return Number of pixels to represent the given time
+     */
+    public double measurePixels(long timeDurationMs) {
+        return Math.ceil(timeDurationMs / msPerPixel());
     }
 
+    /**
+     * Converts pixels to a time interval (milliseconds) under this zoom factor.
+     *
+     * @param pixels Pixels to convert to time
+     * @return Time duration represented by the pixels, in milliseconds
+     */
     public double measureTimeMs(double pixels) {
         return pixels * msPerPixel();
     }
 
+    /**
+     * Apply an increment scale factor on top of the current, returning a new horizontal zoom
+     * instance.
+     *
+     * @param increment Zoom factor increment.
+     * @return Adjusted horizontal zoom factor (new instance)
+     */
     public HorizontalZoom adjust(double increment) {
         if (value + increment <= 0) {
             return this;
@@ -42,7 +63,15 @@ public final class HorizontalZoom {
         return new HorizontalZoom(value + increment);
     }
 
-    public static HorizontalZoom of(double value) {
-        return new HorizontalZoom(value);
+    /**
+     * Creates an instance of HorizontalZoom from a give scale factor.
+     *
+     * @param scaleFactor Scale factor.
+     * @return HorizontalZoom instance representing this scale factor.
+     */
+    public static HorizontalZoom of(double scaleFactor) {
+        Preconditions.checkArgument(scaleFactor > 0d, "Scale factor must be > 0d");
+
+        return new HorizontalZoom(scaleFactor);
     }
 }
