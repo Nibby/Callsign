@@ -172,10 +172,10 @@ final class TraceViewCanvas extends Canvas {
                 double width = viewport.measureDisplayedWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
 
                 graphics.setFill(colorScheme.getIntervalTraceEventBackground());
-                graphics.fillRect(xStart, yStart + 6, width, bandHeight - 12);
+                graphics.fillRect(xStart, yStart + 4, width, bandHeight - 8);
 
                 graphics.setStroke(colorScheme.getIntervalTraceEventOutline());
-                graphics.strokeRect(xStart, yStart + 6, width, bandHeight - 12);
+                graphics.strokeRect(xStart, yStart + 4, width, bandHeight - 8);
 
             } else if (displayOptions.isShowInstantTraces() && trace instanceof InstantTrace instantTrace) {
                 instantTraces.add(instantTrace);

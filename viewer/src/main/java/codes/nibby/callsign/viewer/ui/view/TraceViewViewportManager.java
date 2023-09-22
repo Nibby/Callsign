@@ -112,7 +112,7 @@ final class TraceViewViewportManager implements TraceViewViewport {
             this.firstCompute = false;
         }
 
-        if (totalTimeRangeChanged) {
+        if (totalTimeRangeChanged || trackContentBoundsChanged) {
             this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor();
         }
 
