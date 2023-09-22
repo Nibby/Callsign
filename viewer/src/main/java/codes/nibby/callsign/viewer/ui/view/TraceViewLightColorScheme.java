@@ -83,11 +83,6 @@ public final class TraceViewLightColorScheme implements TraceViewColorScheme {
     }
 
     @Override
-    public Color getTimelineMinorTick() {
-        return Color.LIGHTGRAY;
-    }
-
-    @Override
     public Color getTimelineText() {
         return Color.DARKGRAY;
     }

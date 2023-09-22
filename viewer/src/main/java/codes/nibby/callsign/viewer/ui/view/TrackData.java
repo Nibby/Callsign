@@ -8,11 +8,11 @@ import java.util.*;
 
 final class TrackData {
 
-    private final Map<Integer, List<Trace>> traces = new LinkedHashMap<>();
+    private final Map<Integer, Set<Trace>> traces = new LinkedHashMap<>();
 
     public void addTrace(Trace newTrace) {
         if (newTrace instanceof InstantTrace) {
-            traces.computeIfAbsent(0, key -> new LinkedList<>()).add(newTrace);
+            traces.computeIfAbsent(0, key -> new LinkedHashSet<>()).add(newTrace);
         } else if (newTrace instanceof IntervalTrace intervalTrace) {
             addIntervalTrace(intervalTrace);
         } else {
@@ -30,7 +30,7 @@ final class TrackData {
         // Avoid overlaps in interval traces by placing them into separate bands on the same track
         findFreeSpotInNextBand:
         do {
-            List<Trace> bandTraces = traces.computeIfAbsent(bandToUse, key -> new LinkedList<>());
+            Set<Trace> bandTraces = traces.computeIfAbsent(bandToUse, key -> new LinkedHashSet<>());
 
             for (Trace trace : bandTraces) {
                 if (!(trace instanceof IntervalTrace intervalTrace)) {
@@ -50,11 +50,12 @@ final class TrackData {
 
         } while (bandToUse < traces.size());
 
-        traces.computeIfAbsent(bandToUse, key -> new LinkedList<>()).add(newTrace);
+        traces.computeIfAbsent(bandToUse, key -> new LinkedHashSet<>()).add(newTrace);
     }
 
-    public List<Trace> getTraces(int band) {
-        return Collections.unmodifiableList(traces.getOrDefault(band, new LinkedList<>()));
+    public Set<Trace> getTraces(int band) {
+        var value = traces.getOrDefault(band, new LinkedHashSet<>());
+        return Collections.unmodifiableSet(value);
     }
 
     public int getBandCount() {

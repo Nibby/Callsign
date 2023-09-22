@@ -22,6 +22,5 @@ public interface TraceViewColorScheme {
     Color getTimelineBorderBackground();
     Color getTimelineIndicatorLinesInContentForeground();
     Color getTimelineMajorTick();
-    Color getTimelineMinorTick();
     Color getTimelineText();
 }
