@@ -73,12 +73,12 @@ public final class TraceViewLightColorScheme implements TraceViewColorScheme {
     private static final Color TIMELINE_INDICATOR_LINES_IN_CONTENT_FOREGROUND = Color.color(0.92d, 0.92d, 0.92d, 1d);
 
     @Override
-    public Color getTimelineIndicatorLinesInContentForeground() {
+    public Color getTimelineDescriptorTickInContentForeground() {
         return TIMELINE_INDICATOR_LINES_IN_CONTENT_FOREGROUND;
     }
 
     @Override
-    public Color getTimelineMajorTick() {
+    public Color getTimelineDescriptorTick() {
         return Color.GRAY;
     }
 

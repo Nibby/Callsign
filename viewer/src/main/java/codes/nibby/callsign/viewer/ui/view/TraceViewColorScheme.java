@@ -20,7 +20,8 @@ public interface TraceViewColorScheme {
 
     Color getTimelineBackground();
     Color getTimelineBorderBackground();
-    Color getTimelineIndicatorLinesInContentForeground();
-    Color getTimelineMajorTick();
+    Color getTimelineDescriptorTickInContentForeground();
+    Color getTimelineDescriptorTick();
     Color getTimelineText();
+
 }

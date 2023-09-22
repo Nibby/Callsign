@@ -93,7 +93,7 @@ final class TraceViewCanvas extends Canvas {
 
     private void paintTimelineIndicatorLinesInContent(TraceViewViewport viewport, TraceViewDisplayOptions displayOptions) {
         TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
-        graphics.setFill(colorScheme.getTimelineIndicatorLinesInContentForeground());
+        graphics.setFill(colorScheme.getTimelineDescriptorTickInContentForeground());
 
         Rectangle2D contentBounds = viewport.getTrackContentBounds();
 
@@ -242,7 +242,7 @@ final class TraceViewCanvas extends Canvas {
         graphics.fillRect(0, height - borderHeight, getWidth(), borderHeight);
 
         // Major ticks
-        graphics.setFill(colorScheme.getTimelineMajorTick());
+        graphics.setFill(colorScheme.getTimelineDescriptorTick());
 
         var timelineDescriptor = viewport.getTimelineDescriptor();
 
