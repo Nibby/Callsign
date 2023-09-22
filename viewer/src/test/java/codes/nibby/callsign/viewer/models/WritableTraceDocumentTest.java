@@ -126,8 +126,8 @@ public abstract class WritableTraceDocumentTest {
     public void testAppendThenStream_intervalStartAndEndEvent_treatedAsPair() throws Exception {
         var writableDocument = createWritableInstance();
 
-        var durationNs = TimeUnit.MILLISECONDS.toMillis(400);
-        var eventPair = TestDataGenerator.generateIntervalEventPair(durationNs).asList();
+        var durationMs = TimeUnit.MILLISECONDS.toMillis(400);
+        var eventPair = TestDataGenerator.generateIntervalEventPair(durationMs).asList();
 
         var startEvent = eventPair.get(0);
         var endEvent = eventPair.get(1);

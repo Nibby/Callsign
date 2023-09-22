@@ -193,22 +193,22 @@ public final class TraceViewContentPane {
     }
 
     private void updateHorizontalScrollbar(TraceContent traces) {
-        Long earliestTimeMs = traces.getEarliestTraceEventStartNs();
-        Long latestTimeMs = traces.getLatestTraceEventEndNs();
+        Long earliestTimeMs = traces.getEarliestTraceEventStartMs();
+        Long latestTimeMs = traces.getLatestTraceEventEndMs();
 
         boolean canScroll;
 
         if (earliestTimeMs == null || latestTimeMs == null) {
             canScroll = false;
         } else {
-            long totalTimeIntervalNs = latestTimeMs - earliestTimeMs;
-            long displayedTimeIntervalNs = viewport.getDisplayedLatestEventTimeMs() - viewport.getDisplayedEarliestEventTimeMs();
+            long totalTimeIntervalMs = latestTimeMs - earliestTimeMs;
+            long displayedTimeIntervalMs = viewport.getDisplayedLatestEventTimeMs() - viewport.getDisplayedEarliestEventTimeMs();
 
-            canScroll = totalTimeIntervalNs - displayedTimeIntervalNs > 0;
+            canScroll = totalTimeIntervalMs - displayedTimeIntervalMs > 0;
 
             if (canScroll) {
-                var totalAmountScrollable = totalTimeIntervalNs - displayedTimeIntervalNs;
-                var visibleAmount = (displayedTimeIntervalNs / (double) totalTimeIntervalNs) * totalAmountScrollable;
+                var totalAmountScrollable = totalTimeIntervalMs - displayedTimeIntervalMs;
+                var visibleAmount = (displayedTimeIntervalMs / (double) totalTimeIntervalMs) * totalAmountScrollable;
 
                 canvasHorizontalScroll.setMax(totalAmountScrollable);
                 canvasHorizontalScroll.setVisibleAmount(visibleAmount);

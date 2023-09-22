@@ -69,13 +69,13 @@ public final class TestDataGenerator {
         return generateIntervalEventPair(null);
     }
 
-    public static Result generateIntervalEventPair(@Nullable Long durationNs) {
+    public static Result generateIntervalEventPair(@Nullable Long durationMs) {
         long realDurationMs;
 
-        if (durationNs == null) {
+        if (durationMs == null) {
             realDurationMs = (int) (Math.random() * 4000) + 500;
         } else {
-            realDurationMs = durationNs;
+            realDurationMs = durationMs;
         }
 
         var startEvent = new IntervalStartEvent("TestIntervalEventPair", Instant.now().toEpochMilli() - realDurationMs);

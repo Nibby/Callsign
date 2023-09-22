@@ -15,8 +15,8 @@ final class TraceContent {
 
     private DisplayData displayData = null;
 
-    private Long earliestTraceEventStartNs = null;
-    private Long latestTraceEventEndNs = null;
+    private Long earliestTraceEventStartMs = null;
+    private Long latestTraceEventEndMs = null;
 
     TraceContent(String trackDisplayAttributeName, String trackBinningAttributeName) {
         this.trackDisplayAttributeName = trackDisplayAttributeName;
@@ -41,13 +41,13 @@ final class TraceContent {
         trace.setTrack(track);
         track.notifyTraceAdded(trace);
 
-        earliestTraceEventStartNs = (earliestTraceEventStartNs == null)
+        earliestTraceEventStartMs = (earliestTraceEventStartMs == null)
             ? track.getEarliestEntryTimeMs()
-            : Math.min(earliestTraceEventStartNs, track.getEarliestEntryTimeMs());
+            : Math.min(earliestTraceEventStartMs, track.getEarliestEntryTimeMs());
 
-        latestTraceEventEndNs = (latestTraceEventEndNs == null)
+        latestTraceEventEndMs = (latestTraceEventEndMs == null)
             ? track.getLatestEntryEndTimeMs()
-            : Math.max(latestTraceEventEndNs, track.getLatestEntryEndTimeMs());
+            : Math.max(latestTraceEventEndMs, track.getLatestEntryEndTimeMs());
 
         displayData = null;
     }
@@ -86,12 +86,12 @@ final class TraceContent {
         return Objects.requireNonNull(displayData);
     }
 
-    public Long getEarliestTraceEventStartNs() {
-        return earliestTraceEventStartNs;
+    public Long getEarliestTraceEventStartMs() {
+        return earliestTraceEventStartMs;
     }
 
-    public Long getLatestTraceEventEndNs() {
-        return latestTraceEventEndNs;
+    public Long getLatestTraceEventEndMs() {
+        return latestTraceEventEndMs;
     }
 
     public static final class DisplayData {
