@@ -1,6 +1,8 @@
 package codes.nibby.callsign.viewer.models.trace;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public final class IntervalTrace extends Trace {
@@ -47,5 +49,10 @@ public final class IntervalTrace extends Trace {
 
     public long getEndTimeMs() {
         return endTimeMs;
+    }
+
+    @Override
+    public Collection<Long> getNotableTimeInstances() {
+        return List.of(startTimeMs, endTimeMs);
     }
 }

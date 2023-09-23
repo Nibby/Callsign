@@ -73,6 +73,29 @@ public interface TraceViewViewport {
     double translateToTrackContentX(long timeMs);
 
     /**
+     * @return Smallest cumulative track band index that is visible on-screen at the moment.
+     */
+    int getVisibleBandIndexStart();
+
+    /**
+     * @param totalBands Total number of track bands in the data
+     * @return Largest cumulative track band index that is visible on-screen at the moment.
+     */
+    int getVisibleBandIndexEnd(int totalBands);
+
+    /**
+     * Translates a given y position in the viewport to a cumulative band index the position resides
+     * within, accounting for current yOffset. If y position is not part of a valid band index,
+     * returns -1.
+     * <p/>
+     * The result may exceed maximum displayable bands in the current data.
+     *
+     * @param yInViewport Y pixel position in the viewport.
+     * @return Cumulative band index for the y position, or -1 if not available.
+     */
+    int translateToCumulativeBandIndex(double yInViewport);
+
+    /**
      * Translates pixel x-position to its corresponding time on the event timeline, accounting
      * for factors such as horizontal scroll offset and zoom.
      *
@@ -99,6 +122,29 @@ public interface TraceViewViewport {
      */
     TimelineDescriptor getTimelineDescriptor();
 
+    /**
+     * Check whether the given time instant is viewable under the current zoom and offset settings.
+     *
+     * @param timeMs Time, in milliseconds, to check visibility.
+     * @return true if the time is visible on screen.
+     */
+    boolean isTimeMsVisible(long timeMs);
+
+    /**
+     * This number is smaller than {@link #getTrackBandHeight()} as the element needs to fit in the
+     * band with extra padding.
+     *
+     * @return Height of the interval trace visual element, in pixels.
+     */
+    double getIntervalTraceHeight();
+
+    /**
+     * This number is smaller than {@link #getTrackBandHeight()} as the element needs to fit in the
+     * band with extra padding.
+     *
+     * @return Square size of an instant trace visual element, in pixels.
+     */
+    double getInstantTraceSize();
 
     /**
      * Describes how major ticks should be displayed on the trace content timeline.

@@ -1,5 +1,7 @@
 package codes.nibby.callsign.viewer.models.trace;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public final class InstantTrace extends Trace {
@@ -13,5 +15,10 @@ public final class InstantTrace extends Trace {
 
     public long getTimeMs() {
         return timeMs;
+    }
+
+    @Override
+    public Collection<Long> getNotableTimeInstances() {
+        return List.of(timeMs);
     }
 }

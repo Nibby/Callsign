@@ -25,10 +25,12 @@ public final class TraceViewContentPane {
     private final TraceViewToolbar toolbar;
 
     private final TraceViewViewportManager viewport;
+    private final TraceViewSelectionManager selection;
     private final TraceViewTraceContentGenerator contentGenerator;
     private final TraceViewDisplayOptions displayOptions;
 
     private final TraceViewCanvas canvas;
+    private final TraceViewCanvasInputHandler canvasInputHandler;
     private final ScrollBar canvasHorizontalScroll;
     private final ScrollBar canvasVerticalScroll;
 
@@ -49,11 +51,26 @@ public final class TraceViewContentPane {
         displayOptions = new TraceViewDisplayOptions();
         contentGenerator = new TraceViewTraceContentGenerator();
         viewport = new TraceViewViewportManager();
+        selection = new TraceViewSelectionManager();
 
         canvas = new TraceViewCanvas();
         canvas.setOnScroll(this::handleCanvasScroll);
         var canvasContainer = new CanvasContainer(canvas);
         canvasContainer.addSizeUpdateListener(newSize -> refreshContent());
+
+        canvasInputHandler = new TraceViewCanvasInputHandler();
+        canvas.setOnMouseMoved(event -> {
+            canvasInputHandler.handleMouseMove(event, viewport, selection, contentGenerator.getLastComputedContent());
+            refreshContent();
+        });
+        canvas.setOnMousePressed(event -> {
+            canvasInputHandler.handleMousePress(event, viewport, selection, contentGenerator.getLastComputedContent());
+            refreshContent();
+        });
+        canvas.setOnMouseExited(event -> {
+            canvasInputHandler.handleMouseExit(event, viewport, selection);
+            refreshContent();
+        });
 
         BorderPane canvasContent = new BorderPane();
         canvasContent.setCenter(canvasContainer);
@@ -64,7 +81,7 @@ public final class TraceViewContentPane {
         canvasVerticalScroll.setMax(0);
         canvasVerticalScroll.setValue(0);
         canvasVerticalScroll.setDisable(true);
-        canvasVerticalScroll.setUnitIncrement(30);
+        canvasVerticalScroll.setUnitIncrement(15);
         canvasVerticalScroll.setBlockIncrement(100);
         canvasVerticalScroll.valueProperty().addListener(event -> {
             viewport.setTrackContentOffsetY(canvasVerticalScroll.getValue());
@@ -186,7 +203,7 @@ public final class TraceViewContentPane {
             traces = null;
         }
 
-        canvas.paint(viewport, traces, displayOptions);
+        canvas.paint(viewport, traces, selection, displayOptions);
     }
 
     private void updateScrollbars(TraceContent traces) {

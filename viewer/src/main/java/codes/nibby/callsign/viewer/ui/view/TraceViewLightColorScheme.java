@@ -70,6 +70,16 @@ public final class TraceViewLightColorScheme implements TraceViewColorScheme {
         return INTERVAL_TRACE_EVENT_OUTLINE;
     }
 
+    @Override
+    public Color getSelectedTraceTimeInstanceMarker() {
+        return Color.RED;
+    }
+
+    @Override
+    public Color getHoveredTraceTimeInstanceMarker() {
+        return Color.BLUE;
+    }
+
     private static final Color TIMELINE_INDICATOR_LINES_IN_CONTENT_FOREGROUND = Color.color(0.92d, 0.92d, 0.92d, 1d);
 
     @Override

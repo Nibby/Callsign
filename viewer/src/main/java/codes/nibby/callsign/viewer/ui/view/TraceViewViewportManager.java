@@ -153,6 +153,29 @@ final class TraceViewViewportManager implements TraceViewViewport {
     }
 
     @Override
+    public int getVisibleBandIndexStart() {
+        return Math.max(0, (int) Math.floor(getTrackContentOffsetY() / getTrackBandHeight()) - 2);
+    }
+
+    @Override
+    public int getVisibleBandIndexEnd(int totalBands) {
+        return Math.min(
+            totalBands,
+            getVisibleBandIndexStart() + (int) Math.ceil((trackContentBounds.getHeight() + timelineBounds.getHeight()) / getTrackBandHeight()) + 2
+        );
+    }
+
+    @Override
+    public int translateToCumulativeBandIndex(double yInViewport) {
+        double yInContent = yInViewport - trackContentBounds.getMinY();
+        double yWithOffset = yInContent + trackContentOffsetY;
+
+        int bandIndex = (int) Math.floor(yWithOffset / getTrackBandHeight());
+
+        return bandIndex >= 0 ? bandIndex : -1;
+    }
+
+    @Override
     public long translateToTimeMs(double trackContentX) {
         long timeMsSinceDisplayedEarliestStartTime = Math.round(trackHorizontalZoom.measureTimeMs(trackContentX));
         return earliestEventTimeMs + trackContentTimeOffsetMs + timeMsSinceDisplayedEarliestStartTime;
@@ -224,5 +247,20 @@ final class TraceViewViewportManager implements TraceViewViewport {
     @Override
     public TimelineDescriptor getTimelineDescriptor() {
         return timelineMajorTickDescriptor;
+    }
+
+    @Override
+    public boolean isTimeMsVisible(long timeMs) {
+        return timeMs >= getDisplayedEarliestEventTimeMs() && timeMs <= getDisplayedLatestEventTimeMs();
+    }
+
+    @Override
+    public double getIntervalTraceHeight() {
+        return Math.max(0, getTrackBandHeight() - 8);
+    }
+
+    @Override
+    public double getInstantTraceSize() {
+        return Math.max(0, getTrackBandHeight() - 16);
     }
 }

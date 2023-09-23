@@ -3,6 +3,7 @@ package codes.nibby.callsign.viewer.models.trace;
 import codes.nibby.callsign.api.Event;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -35,4 +36,7 @@ public sealed abstract class Trace permits InstantTrace, IntervalTrace {
     public void setTrack(@Nullable TraceTrack track) {
         this.track = track;
     }
+
+    public abstract Collection<Long> getNotableTimeInstances();
+
 }

@@ -25,11 +25,16 @@ final class TraceViewCanvas extends Canvas {
         this.graphics = getGraphicsContext2D();
     }
 
-    public void paint(TraceViewViewport viewport, @Nullable TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    public void paint(
+        TraceViewViewport viewport,
+        @Nullable TraceContent traces,
+        TraceViewSelection selection,
+        TraceViewDisplayOptions displayOptions
+    ) {
         paintBackground(displayOptions.getColorScheme());
 
         if (traces != null) {
-            paintTrackContent(viewport, traces, displayOptions);
+            paintTrackContent(viewport, traces, selection, displayOptions);
             paintTrackHeader(viewport, traces, displayOptions);
             paintTimelineIndicatorHeaders(viewport, displayOptions);
         }
@@ -40,7 +45,12 @@ final class TraceViewCanvas extends Canvas {
         graphics.fillRect(0, 0, getWidth(), getHeight());
     }
 
-    private void paintTrackContent(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    private void paintTrackContent(
+        TraceViewViewport viewport,
+        TraceContent traces,
+        TraceViewSelection selection,
+        TraceViewDisplayOptions displayOptions
+    ) {
         graphics.setFill(displayOptions.getColorScheme().getContentRowBackground());
 
         Rectangle2D contentBounds = viewport.getTrackContentBounds();
@@ -48,7 +58,8 @@ final class TraceViewCanvas extends Canvas {
 
         paintTraceBackground(viewport, traces, displayOptions);
         paintTimelineIndicatorLinesInContent(viewport, displayOptions);
-        paintTraces(viewport, traces, displayOptions);
+        paintTraces(viewport, traces, selection, displayOptions);
+        paintSelectionMarkers(viewport, selection, displayOptions);
     }
 
     private void paintTraceBackground(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
@@ -61,31 +72,20 @@ final class TraceViewCanvas extends Canvas {
 
         double yStart = contentBounds.getMinY() - viewport.getTrackContentOffsetY();
 
-        forEachVisibleBandIndex(viewport, traces.getTotalDisplayableBands(), cumulativeBandIndex ->
+        int startBandIndex = viewport.getVisibleBandIndexStart();
+        int endBandIndex = viewport.getVisibleBandIndexEnd(traces.getTotalDisplayableBands());
+
+        for (int cumulativeBandIndex = startBandIndex; cumulativeBandIndex <= endBandIndex; cumulativeBandIndex++) {
+            final int bandIndex = cumulativeBandIndex;
+
             traces.getTrackDisplayData(cumulativeBandIndex).ifPresent(trackDisplayData -> {
-                double bandY = yStart + cumulativeBandIndex * viewport.getTrackBandHeight();
+                double bandY = yStart + bandIndex * viewport.getTrackBandHeight();
                 int displayIndex = trackDisplayData.trackDisplayIndex();
                 boolean isAlternateRow = displayIndex % 2 == 1;
 
                 graphics.setFill(isAlternateRow ? colorScheme.getContentAlternateRowBackground() : colorScheme.getContentRowBackground());
                 graphics.fillRect(contentBounds.getMinX(), bandY, contentBounds.getWidth(), viewport.getTrackBandHeight());
-            })
-        );
-    }
-
-    private void forEachVisibleBandIndex(TraceViewViewport viewport, int totalBands, Consumer<Integer> cumulativeBandIndexConsumer) {
-        Rectangle2D contentBounds = viewport.getTrackContentBounds();
-        Rectangle2D timelineBounds = viewport.getTimelineBounds();
-
-        int startBandIndex = Math.max(0, (int) Math.floor(viewport.getTrackContentOffsetY() / viewport.getTrackBandHeight()) - 2);
-
-        int endBandIndex = Math.min(
-            totalBands,
-            startBandIndex + (int) Math.ceil((contentBounds.getHeight() + timelineBounds.getHeight()) / viewport.getTrackBandHeight()) + 2
-        );
-
-        for (int cumulativeBandIndex = startBandIndex; cumulativeBandIndex < endBandIndex; cumulativeBandIndex++) {
-            cumulativeBandIndexConsumer.accept(cumulativeBandIndex);
+            });
         }
     }
 
@@ -124,14 +124,24 @@ final class TraceViewCanvas extends Canvas {
         }
     }
 
-    private void paintTraces(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
+    private void paintTraces(
+        TraceViewViewport viewport,
+        TraceContent traces,
+        TraceViewSelection selection,
+        TraceViewDisplayOptions displayOptions
+    ) {
         Map<TraceTrack, TrackData> trackDatum = traces.getTrackDisplayData();
 
         Rectangle2D contentBounds = viewport.getTrackContentBounds();
 
         double yStart = contentBounds.getMinY() - viewport.getTrackContentOffsetY();
 
-        forEachVisibleBandIndex(viewport, traces.getTotalDisplayableBands(), cumulativeBandIndex ->
+        int startBandIndex = viewport.getVisibleBandIndexStart();
+        int endBandIndex = viewport.getVisibleBandIndexEnd(traces.getTotalDisplayableBands());
+
+        for (int cumulativeBandIndex = startBandIndex; cumulativeBandIndex <= endBandIndex; cumulativeBandIndex++) {
+            final int bandIndex = cumulativeBandIndex;
+
             traces.getTrackDisplayData(cumulativeBandIndex).ifPresent(trackDisplayData -> {
                 TraceTrack track = trackDisplayData.track();
                 @Nullable TrackData trackData = trackDatum.get(track);
@@ -140,17 +150,18 @@ final class TraceViewCanvas extends Canvas {
                     return;
                 }
 
-                double y = yStart + cumulativeBandIndex * viewport.getTrackBandHeight();
+                double y = yStart + bandIndex * viewport.getTrackBandHeight();
 
-                Set<Trace> bandTraces = trackData.getTraces(cumulativeBandIndex - trackDisplayData.cumulativeBandDisplayIndexStart());
-                paintTraceBand(viewport, bandTraces, displayOptions, y);
-            })
-        );
+                Set<Trace> bandTraces = trackData.getTraces(bandIndex - trackDisplayData.cumulativeBandDisplayIndexStart());
+                paintTraceBand(viewport, bandTraces, selection, displayOptions, y);
+            });
+        }
     }
 
     private void paintTraceBand(
         TraceViewViewport viewport,
         Collection<Trace> bandTraces,
+        TraceViewSelection selection,
         TraceViewDisplayOptions displayOptions,
         double yStart
     ) {
@@ -163,16 +174,34 @@ final class TraceViewCanvas extends Canvas {
             return;
         }
 
+        Collection<Trace> selectedTraces = selection.getSelectedTraces();
+        Collection<Trace> hoveredTraces = selection.getHoveredTraces();
+
         for (Trace trace : bandTraces) {
+            boolean hovered = hoveredTraces.contains(trace);
+            boolean selected = selectedTraces.contains(trace);
+
             if (displayOptions.isShowIntervalTraces() && trace instanceof IntervalTrace intervalTrace) {
+                final double height = viewport.getIntervalTraceHeight();
+                final double verticalPadding = viewport.getTrackBandHeight() - height;
+
                 double xStart = viewport.translateToTrackContentX(intervalTrace.getStartTimeMs());
                 double width = viewport.measureDisplayedWidth((intervalTrace.getEndTimeMs() - intervalTrace.getStartTimeMs()));
 
-                graphics.setFill(colorScheme.getIntervalTraceEventBackground());
-                graphics.fillRect(xStart, yStart + 4, width, bandHeight - 8);
+                // TODO: Temporary
+                Color fill = colorScheme.getIntervalTraceEventBackground();
+
+                if (selected) {
+                    fill = Color.BLUE;
+                } else if (hovered) {
+                    fill = Color.RED;
+                }
+
+                graphics.setFill(fill);
+                graphics.fillRect(xStart, yStart + verticalPadding / 2, width, bandHeight - verticalPadding);
 
                 graphics.setStroke(colorScheme.getIntervalTraceEventOutline());
-                graphics.strokeRect(xStart, yStart + 4, width, bandHeight - 8);
+                graphics.strokeRect(xStart, yStart + verticalPadding / 2, width, bandHeight - verticalPadding);
 
             } else if (displayOptions.isShowInstantTraces() && trace instanceof InstantTrace instantTrace) {
                 instantTraces.add(instantTrace);
@@ -182,13 +211,46 @@ final class TraceViewCanvas extends Canvas {
         if (displayOptions.isShowInstantTraces()) {
             for (InstantTrace instantTrace : instantTraces) {
                 double xStart = viewport.translateToTrackContentX(instantTrace.getTimeMs());
-                double size = bandHeight - 18;
+                double size = viewport.getInstantTraceSize();
 
                 graphics.setFill(colorScheme.getInstantTraceEventBackground());
                 graphics.fillOval(xStart - size / 2, yStart + bandHeight / 2 - size / 2, size, size);
 
                 graphics.setStroke(colorScheme.getInstantTraceEventOutline());
                 graphics.strokeOval(xStart - size / 2, yStart + bandHeight / 2 - size / 2, size, size);
+            }
+        }
+    }
+
+    private void paintSelectionMarkers(TraceViewViewport viewport, TraceViewSelection selection, TraceViewDisplayOptions displayOptions) {
+        TraceViewColorScheme colorScheme = displayOptions.getColorScheme();
+        Rectangle2D contentBounds = viewport.getTrackContentBounds();
+
+        // Paint hover
+        graphics.setStroke(colorScheme.getHoveredTraceTimeInstanceMarker());
+
+        for (Trace trace : selection.getHoveredTraces()) {
+            for (Long timeInstance : trace.getNotableTimeInstances()) {
+                if (!viewport.isTimeMsVisible(timeInstance)) {
+                    continue;
+                }
+
+                double x = viewport.translateToTrackContentX(timeInstance);
+                graphics.strokeLine(x, contentBounds.getMinY(), x, contentBounds.getMaxY());
+            }
+        }
+
+        // Paint selection
+        graphics.setStroke(colorScheme.getSelectedTraceTimeInstanceMarker());
+
+        for (Trace trace : selection.getSelectedTraces()) {
+            for (Long timeInstance : trace.getNotableTimeInstances()) {
+                if (!viewport.isTimeMsVisible(timeInstance)) {
+                    continue;
+                }
+
+                double x = viewport.translateToTrackContentX(timeInstance);
+                graphics.strokeLine(x, contentBounds.getMinY(), x, contentBounds.getMaxY());
             }
         }
     }

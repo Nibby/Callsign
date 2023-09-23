@@ -2,6 +2,7 @@ package codes.nibby.callsign.viewer.ui.view;
 
 import codes.nibby.callsign.viewer.models.trace.Trace;
 import codes.nibby.callsign.viewer.models.trace.TraceTrack;
+import com.google.common.base.Preconditions;
 
 import java.util.*;
 
@@ -103,5 +104,15 @@ final class TraceContent {
         TraceTrack track,
         TrackData trackData,
         int trackDisplayIndex
-    ) {}
+    ) {
+
+        public Collection<Trace> getTracesFromCumulativeBandIndex(int cumulativeBandIndex) {
+            Preconditions.checkArgument(cumulativeBandIndex >= cumulativeBandDisplayIndexStart);
+            Preconditions.checkArgument(cumulativeBandIndex <= cumulativeBandDisplayIndexEnd);
+
+            int normalizedBandIndex = cumulativeBandIndex - cumulativeBandDisplayIndexStart;
+
+            return trackData.getTraces(normalizedBandIndex);
+        }
+    }
 }
