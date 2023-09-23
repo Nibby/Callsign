@@ -59,12 +59,10 @@ final class TraceViewCanvas extends Canvas {
         graphics.setFill(colorScheme.getContentBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
-        TraceContent.DisplayData displayData = traces.getDisplayData();
-
         double yStart = contentBounds.getMinY() - viewport.getTrackContentOffsetY();
 
-        forEachVisibleBandIndex(viewport, displayData.getTotalBands(), cumulativeBandIndex ->
-            displayData.getTrackDataFromCumulativeBandIndex(cumulativeBandIndex).ifPresent(trackDisplayData -> {
+        forEachVisibleBandIndex(viewport, traces.getTotalDisplayableBands(), cumulativeBandIndex ->
+            traces.getTrackDisplayData(cumulativeBandIndex).ifPresent(trackDisplayData -> {
                 double bandY = yStart + cumulativeBandIndex * viewport.getTrackBandHeight();
                 int displayIndex = trackDisplayData.trackDisplayIndex();
                 boolean isAlternateRow = displayIndex % 2 == 1;
@@ -127,15 +125,14 @@ final class TraceViewCanvas extends Canvas {
     }
 
     private void paintTraces(TraceViewViewport viewport, TraceContent traces, TraceViewDisplayOptions displayOptions) {
-        TraceContent.DisplayData displayData = traces.getDisplayData();
-        Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
+        Map<TraceTrack, TrackData> trackDatum = traces.getTrackDisplayData();
 
         Rectangle2D contentBounds = viewport.getTrackContentBounds();
 
         double yStart = contentBounds.getMinY() - viewport.getTrackContentOffsetY();
 
-        forEachVisibleBandIndex(viewport, displayData.getTotalBands(), cumulativeBandIndex ->
-            displayData.getTrackDataFromCumulativeBandIndex(cumulativeBandIndex).ifPresent(trackDisplayData -> {
+        forEachVisibleBandIndex(viewport, traces.getTotalDisplayableBands(), cumulativeBandIndex ->
+            traces.getTrackDisplayData(cumulativeBandIndex).ifPresent(trackDisplayData -> {
                 TraceTrack track = trackDisplayData.track();
                 @Nullable TrackData trackData = trackDatum.get(track);
 
@@ -205,7 +202,7 @@ final class TraceViewCanvas extends Canvas {
         graphics.setFill(colorScheme.getGutterBackground());
         graphics.fillRect(0, 0, trackHeaderBounds.getWidth(), getHeight());
 
-        Map<TraceTrack, TrackData> trackDatum = traces.getTrackData();
+        Map<TraceTrack, TrackData> trackDatum = traces.getTrackDisplayData();
         int trackIndex = 0;
         double yStart = trackContentBounds.getMinY() - viewport.getTrackContentOffsetY();
 

@@ -153,6 +153,7 @@ public final class TraceViewContentPane {
         refreshContent();
     }
 
+    private String lastBinningAttributeName = null;
     private void refreshContent() {
         double totalWidth = contentPane.getWidth() - canvasVerticalScroll.getWidth();
         double totalHeight = contentPane.getHeight() - canvasHorizontalScroll.getHeight();
@@ -167,7 +168,7 @@ public final class TraceViewContentPane {
         String binningAttributeName = displayOptions.getBinningAttributeName();
 
         if (binningAttributeName != null) {
-            if (viewportChanged) {
+            if (viewportChanged || !Objects.equals(lastBinningAttributeName, binningAttributeName)) {
                 long displayedEarliestTimeMs = viewport.getDisplayedEarliestEventTimeMs();
                 long displayedLatestTimeMs = viewport.getDisplayedLatestEventTimeMs();
 
@@ -175,6 +176,7 @@ public final class TraceViewContentPane {
                 filters.setDisplayedTimeInterval(displayedEarliestTimeMs, displayedLatestTimeMs);
 
                 traces = contentGenerator.computeContent(document, binningAttributeName, filters);
+                lastBinningAttributeName = binningAttributeName;
             } else {
                 traces = Objects.requireNonNull(contentGenerator.getLastComputedContent(), "no last computed content");
             }
@@ -227,7 +229,7 @@ public final class TraceViewContentPane {
     }
 
     private void updateVerticalScrollbar(TraceContent traces) {
-        double totalViewableHeight = traces.getDisplayData().getTotalBands() * viewport.getTrackBandHeight();
+        double totalViewableHeight = traces.getTotalDisplayableBands() * viewport.getTrackBandHeight();
         double traceContentHeight = viewport.getTrackContentBounds().getHeight();
 
         boolean canScroll = (totalViewableHeight - traceContentHeight) > 0;

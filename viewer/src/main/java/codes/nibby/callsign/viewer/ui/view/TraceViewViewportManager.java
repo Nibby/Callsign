@@ -52,8 +52,8 @@ final class TraceViewViewportManager implements TraceViewViewport {
         boolean trackContentBoundsChanged = false;
         boolean firstCompute = this.firstCompute;
 
-        double newTrackContentWidth = 0;
-        double newTrackContentHeight = 0;
+        double newTrackContentWidth = trackContentBounds.getWidth();
+        double newTrackContentHeight = trackContentBounds.getHeight();
 
         if (firstCompute) {
            timelineBounds = new Rectangle2D(0, 0, Math.max(0, totalWidth), TIMELINE_HEIGHT);
@@ -70,12 +70,12 @@ final class TraceViewViewportManager implements TraceViewViewport {
            );
         }
 
-        if (Math.abs(trackContentBounds.getWidth() - totalWidth) > EPSILON) {
+        if (Math.abs(trackContentBounds.getWidth() - (totalWidth - DEFAULT_TRACK_HEADER_WIDTH)) > EPSILON) {
             newTrackContentWidth = Math.max(1, totalWidth - DEFAULT_TRACK_HEADER_WIDTH);
             trackContentBoundsChanged = true;
         }
 
-        if (Math.abs(trackContentBounds.getHeight() - totalHeight) > EPSILON) {
+        if (Math.abs(trackContentBounds.getHeight() - (totalHeight - TIMELINE_HEIGHT)) > EPSILON) {
             newTrackContentHeight = Math.max(1, totalHeight - TIMELINE_HEIGHT);
 
             trackHeaderBounds = new Rectangle2D(

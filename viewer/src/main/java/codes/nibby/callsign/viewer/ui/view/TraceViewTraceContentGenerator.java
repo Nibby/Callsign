@@ -5,10 +5,14 @@ import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 final class TraceViewTraceContentGenerator {
 
     @Nullable
     private TraceContent traceContent = null;
+
+    private String lastTrackBinningAttributeName;
 
     public TraceViewTraceContentGenerator() {
     }
@@ -23,10 +27,14 @@ final class TraceViewTraceContentGenerator {
             return null;
         }
 
-        traceContent = new TraceContent(trackBinningAttributeName, trackBinningAttributeName);
+        if (traceContent == null || !Objects.equals(trackBinningAttributeName, lastTrackBinningAttributeName)) {
+            traceContent = new TraceContent(trackBinningAttributeName, trackBinningAttributeName);
 
-        populateTraces(document, filters, traceContent);
-        traceContent.computeDisplayData();
+            populateTraces(document, filters, traceContent);
+            traceContent.computeDisplayData();
+
+            lastTrackBinningAttributeName = trackBinningAttributeName;
+        }
 
         return traceContent;
     }
