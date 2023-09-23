@@ -112,10 +112,6 @@ final class TraceViewViewportManager implements TraceViewViewport {
             this.firstCompute = false;
         }
 
-        if (totalTimeRangeChanged || trackContentBoundsChanged) {
-            this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor();
-        }
-
         return firstCompute || totalTimeRangeChanged || trackContentBoundsChanged;
     }
 
@@ -145,6 +141,7 @@ final class TraceViewViewportManager implements TraceViewViewport {
      */
     public void setZoom(HorizontalZoom zoom) {
         this.trackHorizontalZoom = Objects.requireNonNull(zoom);
+        this.timelineMajorTickDescriptor = computeTimelineMajorTickDescriptor();
     }
 
     @Override
