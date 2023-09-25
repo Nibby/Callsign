@@ -3,13 +3,17 @@ package codes.nibby.callsign.viewer.ui.view;
 import codes.nibby.callsign.viewer.models.trace.Trace;
 import com.google.common.base.Preconditions;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 
 final class TraceViewSelectionManager implements TraceViewSelection {
 
-    private final Collection<Trace> hoveredTraces = new LinkedHashSet<>();
+    @Nullable
+    private Trace hoveredTrace = null;
+
     private final Collection<Trace> selectedTraces = new LinkedHashSet<>();
 
     public void clearSelectedTraces() {
@@ -47,22 +51,21 @@ final class TraceViewSelectionManager implements TraceViewSelection {
         return Collections.unmodifiableCollection(selectedTraces);
     }
 
-    public void clearHoveredTraces() {
-        hoveredTraces.clear();
+    public void clearHoveredTrace() {
+        hoveredTrace = null;
     }
 
-    public void setHoveredTraces(Collection<Trace> traces) {
-        hoveredTraces.clear();
-        hoveredTraces.addAll(traces);
+    public void setHoveredTrace(@Nullable Trace trace) {
+        hoveredTrace = trace;
     }
 
     @Override
-    public Collection<Trace> getHoveredTraces() {
-        return Collections.unmodifiableCollection(hoveredTraces);
+    public Optional<Trace> getHoveredTrace() {
+        return Optional.ofNullable(hoveredTrace);
     }
 
     public void clearAll() {
         clearSelectedTraces();
-        clearHoveredTraces();
+        clearHoveredTrace();
     }
 }

@@ -7,7 +7,9 @@ import codes.nibby.callsign.viewer.ui.CanvasContainer;
 import com.google.common.base.Preconditions;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.SplitPane;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +25,7 @@ public final class TraceViewContentPane {
     private TraceDocument document;
 
     private final TraceViewToolbar toolbar;
+    private final TraceViewSidebar sidebar;
 
     private final TraceViewViewportManager viewport;
     private final TraceViewSelectionManager selection;
@@ -60,15 +63,29 @@ public final class TraceViewContentPane {
 
         canvasInputHandler = new TraceViewCanvasInputHandler();
         canvas.setOnMouseMoved(event -> {
-            canvasInputHandler.handleMouseMove(event, viewport, selection, contentGenerator.getLastComputedContent());
+            canvasInputHandler.handleMouseMove(
+                event,
+                viewport,
+                selection,
+                contentGenerator.getLastComputedContent()
+            );
             refreshContent();
         });
         canvas.setOnMousePressed(event -> {
-            canvasInputHandler.handleMousePress(event, viewport, selection, contentGenerator.getLastComputedContent());
+            canvasInputHandler.handleMousePress(
+                event,
+                viewport,
+                selection,
+                contentGenerator.getLastComputedContent()
+            );
             refreshContent();
         });
         canvas.setOnMouseExited(event -> {
-            canvasInputHandler.handleMouseExit(event, viewport, selection);
+            canvasInputHandler.handleMouseExit(
+                event,
+                viewport,
+                selection
+            );
             refreshContent();
         });
 
@@ -106,7 +123,15 @@ public final class TraceViewContentPane {
         horizontalScrollPane.setRight(gapPane);
         canvasContent.setBottom(horizontalScrollPane);
 
-        contentPane.setCenter(canvasContent);
+        BorderPane sidebarContent = new BorderPane();
+
+        sidebar = new TraceViewSidebar();
+        sidebarContent.setCenter(sidebar.getComponent());
+
+        SplitPane contentSidebarSplit = new SplitPane(canvasContent, sidebarContent);
+        contentSidebarSplit.getDividers().get(0).setPosition(0.75d);
+
+        contentPane.setCenter(contentSidebarSplit);
     }
 
     private void handleShowIntervalEventSettingChanged(boolean show) {
@@ -170,7 +195,9 @@ public final class TraceViewContentPane {
         refreshContent();
     }
 
+    // TODO: Temporary
     private String lastBinningAttributeName = null;
+
     private void refreshContent() {
         double totalWidth = contentPane.getWidth() - canvasVerticalScroll.getWidth();
         double totalHeight = contentPane.getHeight() - canvasHorizontalScroll.getHeight();
@@ -202,6 +229,8 @@ public final class TraceViewContentPane {
         } else {
             traces = null;
         }
+
+        sidebar.refreshContent(selection);
 
         canvas.paint(viewport, traces, selection, displayOptions);
     }

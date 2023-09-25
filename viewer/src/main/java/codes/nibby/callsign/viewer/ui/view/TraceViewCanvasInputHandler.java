@@ -6,10 +6,7 @@ import codes.nibby.callsign.viewer.models.trace.Trace;
 import javafx.scene.input.MouseEvent;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Optional;
+import java.util.*;
 
 final class TraceViewCanvasInputHandler {
 
@@ -20,7 +17,13 @@ final class TraceViewCanvasInputHandler {
         @Nullable TraceContent traces
     ) {
         Collection<Trace> intersection = getTracesIntersectingMouseCursor(event, viewport, traces);
-        selection.setHoveredTraces(intersection);
+        @Nullable Trace hoveredTrace = null;
+
+        if (!intersection.isEmpty()) {
+            hoveredTrace = intersection.iterator().next();
+        }
+
+        selection.setHoveredTrace(hoveredTrace);
     }
 
     public void handleMousePress(
@@ -39,7 +42,11 @@ final class TraceViewCanvasInputHandler {
         }
     }
 
-    private Collection<Trace> getTracesIntersectingMouseCursor(MouseEvent event, TraceViewViewport viewport, TraceContent traces) {
+    private Collection<Trace> getTracesIntersectingMouseCursor(
+        MouseEvent event,
+        TraceViewViewport viewport,
+        TraceContent traces
+    ) {
         if (traces == null) {
             return Collections.emptySet();
         }

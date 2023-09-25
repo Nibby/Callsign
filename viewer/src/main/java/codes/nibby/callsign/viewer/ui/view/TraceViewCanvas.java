@@ -177,10 +177,10 @@ final class TraceViewCanvas extends Canvas {
         }
 
         Collection<Trace> selectedTraces = selection.getSelectedTraces();
-        Collection<Trace> hoveredTraces = selection.getHoveredTraces();
+        @Nullable Trace hoveredTrace = selection.getHoveredTrace().orElse(null);
 
         for (Trace trace : bandTraces) {
-            boolean hovered = hoveredTraces.contains(trace);
+            boolean hovered = trace.equals(hoveredTrace);
             boolean selected = selectedTraces.contains(trace);
 
             if (displayOptions.isShowIntervalTraces() && trace instanceof IntervalTrace intervalTrace) {
@@ -240,7 +240,7 @@ final class TraceViewCanvas extends Canvas {
         // Paint hover
         graphics.setStroke(colorScheme.getHoveredTraceTimeInstanceMarker());
 
-        for (Trace trace : selection.getHoveredTraces()) {
+        selection.getHoveredTrace().ifPresent(trace -> {
             for (Long timeInstance : trace.getNotableTimeInstances()) {
                 if (!viewport.isTimeMsVisible(timeInstance)) {
                     continue;
@@ -249,7 +249,7 @@ final class TraceViewCanvas extends Canvas {
                 double x = viewport.translateToTrackContentX(timeInstance);
                 graphics.strokeLine(x, contentBounds.getMinY(), x, contentBounds.getMaxY());
             }
-        }
+        });
 
         // Paint selection
         graphics.setStroke(colorScheme.getSelectedTraceTimeInstanceMarker());
