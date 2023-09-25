@@ -98,6 +98,14 @@ final class TraceContent {
         return trackLookupByCumulativeBandIndex.size();
     }
 
+    public String getTrackDisplayAttributeName() {
+        return trackDisplayAttributeName;
+    }
+
+    public String getTrackBinningAttributeName() {
+        return trackBinningAttributeName;
+    }
+
     public record TrackDisplayData(
         int cumulativeBandDisplayIndexStart,
         int cumulativeBandDisplayIndexEnd,

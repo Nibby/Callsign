@@ -4,6 +4,7 @@ import codes.nibby.callsign.viewer.models.trace.InstantTrace;
 import codes.nibby.callsign.viewer.models.trace.IntervalTrace;
 import codes.nibby.callsign.viewer.models.trace.Trace;
 import codes.nibby.callsign.viewer.models.trace.TraceTrack;
+import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -153,7 +154,7 @@ final class TraceViewCanvas extends Canvas {
                 double y = yStart + bandIndex * viewport.getTrackBandHeight();
 
                 Set<Trace> bandTraces = trackData.getTraces(bandIndex - trackDisplayData.cumulativeBandDisplayIndexStart());
-                paintTraceBand(viewport, bandTraces, selection, displayOptions, y);
+                paintTraceBand(viewport, bandTraces, selection, traces.getTrackDisplayAttributeName(), displayOptions, y);
             });
         }
     }
@@ -162,6 +163,7 @@ final class TraceViewCanvas extends Canvas {
         TraceViewViewport viewport,
         Collection<Trace> bandTraces,
         TraceViewSelection selection,
+        String trackDisplayAttributeName,
         TraceViewDisplayOptions displayOptions,
         double yStart
     ) {
@@ -202,6 +204,15 @@ final class TraceViewCanvas extends Canvas {
 
                 graphics.setStroke(colorScheme.getIntervalTraceEventOutline());
                 graphics.strokeRect(xStart, yStart + verticalPadding / 2, width, bandHeight - verticalPadding);
+
+                @Nullable String displayName = intervalTrace.getAttributes().get(trackDisplayAttributeName);
+                if (displayName != null) {
+                    Text text = new Text(displayName);
+                    Bounds textBounds = text.getBoundsInLocal();
+
+                    graphics.setFill(colorScheme.getIntervalTraceEventOutline());
+                    graphics.fillText(displayName, xStart + 3, yStart + bandHeight / 2 + textBounds.getHeight() / 4);
+                }
 
             } else if (displayOptions.isShowInstantTraces() && trace instanceof InstantTrace instantTrace) {
                 instantTraces.add(instantTrace);
