@@ -50,7 +50,7 @@ public final class TraceViewToolbar {
         zoomSpinner = new Spinner<>();
         zoomSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(
             0,
-            1800,
+            10_000,
             100, // Initial amount
             10   // Amount to step by
         ));

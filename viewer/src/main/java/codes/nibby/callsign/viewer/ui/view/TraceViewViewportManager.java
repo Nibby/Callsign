@@ -181,6 +181,11 @@ final class TraceViewViewportManager implements TraceViewViewport {
         return earliestEventTimeMs + trackContentTimeOffsetMs + timeMsSinceDisplayedEarliestStartTime;
     }
 
+    @Override
+    public double measureTimeMs(double widthInPixels) {
+        return trackHorizontalZoom.measureTimeMs(widthInPixels);
+    }
+
     /**
      * @return Time (in milliseconds) represented on the left edge of the viewable region.
      */

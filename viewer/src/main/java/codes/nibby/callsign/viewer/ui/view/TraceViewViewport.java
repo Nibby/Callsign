@@ -105,6 +105,14 @@ public interface TraceViewViewport {
     long translateToTimeMs(double trackContentX);
 
     /**
+     * Convert number of pixels to time interval representation under the current zoom settings.
+     *
+     * @param widthInPixels Width to convert, in pixels.
+     * @return Time representation of this width on screen.
+     */
+    double measureTimeMs(double widthInPixels);
+
+    /**
      * @return Current vertical scroll offset for track content, in pixels.
      */
     double getTrackContentOffsetY();

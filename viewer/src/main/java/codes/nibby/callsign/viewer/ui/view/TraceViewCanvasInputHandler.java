@@ -81,8 +81,8 @@ final class TraceViewCanvasInputHandler {
                 intersecting = testMouseIntersection(startTimeMs, endTimeMs, mouseXInContent, viewport);
             } else if (trace instanceof InstantTrace instantTrace) {
                 double size = viewport.getInstantTraceSize();
-                long startTimeMs = instantTrace.getTimeMs() - viewport.translateToTimeMs(size / 2);
-                long endTimeMs = instantTrace.getTimeMs() + viewport.translateToTimeMs(size / 2);
+                long startTimeMs = instantTrace.getTimeMs() - (int) Math.round(viewport.measureTimeMs(size / 2));
+                long endTimeMs = instantTrace.getTimeMs() + (int) Math.round(viewport.measureTimeMs(size / 2));
 
                 intersecting = testMouseIntersection(startTimeMs, endTimeMs, mouseXInContent, viewport);
             } else {

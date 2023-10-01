@@ -1,5 +1,6 @@
 package codes.nibby.callsign.viewer.ui.view;
 
+import codes.nibby.callsign.api.Event;
 import codes.nibby.callsign.viewer.models.document.TraceDocument;
 import codes.nibby.callsign.viewer.models.document.TraceDocumentAccessException;
 import codes.nibby.callsign.viewer.models.filters.TraceFilters;
@@ -28,7 +29,7 @@ final class TraceViewTraceContentGenerator {
         }
 
         if (traceContent == null || !Objects.equals(trackBinningAttributeName, lastTrackBinningAttributeName)) {
-            traceContent = new TraceContent(trackBinningAttributeName, trackBinningAttributeName);
+            traceContent = new TraceContent(Event.SPECIAL_NAME_ATTRIBUTE, trackBinningAttributeName);
 
             populateTraces(document, filters, traceContent);
             traceContent.computeDisplayData();

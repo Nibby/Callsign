@@ -16,7 +16,7 @@ final class TraceViewSidebar {
 
     private final Node component;
 
-    private final ToolBar headerToolbar;
+//    private final ToolBar headerToolbar;
 
     private final TabPane tabPane;
     private final TraceSelectionTab traceSelectionTab;
@@ -25,9 +25,9 @@ final class TraceViewSidebar {
         BorderPane contentPane = new BorderPane();
         component = contentPane;
 
-        headerToolbar = new ToolBar();
-        headerToolbar.getItems().add(new Button("Test"));
-        contentPane.setTop(headerToolbar);
+//        headerToolbar = new ToolBar();
+//        headerToolbar.getItems().add(new Button("Test"));
+//        contentPane.setTop(headerToolbar);
 
         tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -35,8 +35,8 @@ final class TraceViewSidebar {
 
         traceSelectionTab = new TraceSelectionTab();
         tabPane.getTabs().addAll(
-            new Tab("Interactions", traceSelectionTab.rootPane),
-            new Tab("Perspective")
+            new Tab("Interactions", traceSelectionTab.rootPane)
+//            new Tab("Perspective")
         );
     }
 
