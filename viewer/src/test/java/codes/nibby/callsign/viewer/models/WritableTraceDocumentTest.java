@@ -157,9 +157,9 @@ public abstract class WritableTraceDocumentTest {
     }
 
     private void assertAttributeEquals(Event event, Trace trace) {
-        assertEquals(event.getAttributeNames().size(), trace.getAttributes().size());
+        assertEquals(event.getAllAttributeNames().size(), trace.getAttributes().size());
 
-        for (String name : event.getAttributeNames()) {
+        for (String name : event.getAllAttributeNames()) {
             String eventValue = event.getAttribute(name);
             String traceValue = trace.getAttributes().get(name);
 

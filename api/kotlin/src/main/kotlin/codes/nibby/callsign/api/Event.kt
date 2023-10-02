@@ -79,7 +79,7 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
      * @param value Value for this attribute
      *
      * @see getAttribute
-     * @see getAttributeNames
+     * @see getUserAttributeNames
      */
     fun putAttribute(name: String, value: String) {
         assertNotSaved()
@@ -94,7 +94,7 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
      * @see putAttribute
      */
     fun getAttribute(name: String) : String? {
-        return attributeData.getUserDefinedValue(name)
+        return attributeData.get(name)
     }
 
     /**
@@ -123,10 +123,17 @@ abstract class Event(existingId: UUID?, val correlationId: UUID?, val type: Stri
     }
 
     /**
-     * @return Immutable set of all user-defined attribute names for this event
+     * @return Immutable set of all user-defined attribute names for this event.
      */
-    fun getAttributeNames() : Set<String> {
+    fun getUserAttributeNames() : Set<String> {
         return Collections.unmodifiableSet(attributeData.getUserDefinedNames())
+    }
+
+    /**
+     * @return Immutable set of all attribute names (including special attributes) for this event.
+     */
+    fun getAllAttributeNames() : Set<String> {
+        return Collections.unmodifiableSet(attributeData.getAllDefinedNames())
     }
 
     internal fun getAttributeData(): AttributeData {

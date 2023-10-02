@@ -139,7 +139,7 @@ public final class WritableSQLiteTraceDocument extends SQLiteTraceDocument imple
                 throw new IllegalStateException("Document not initialized!");
             }
 
-            Set<String> missingAttributeNames = event.getAttributeNames().stream()
+            Set<String> missingAttributeNames = event.getAllAttributeNames().stream()
                 .filter(name -> !attributeNameLookup.containsValue(name))
                 .collect(Collectors.toSet());
 
